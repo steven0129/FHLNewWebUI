@@ -1,0 +1,623 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+  <script src="../libs/jquery-1.10.2.js"></script>
+  <link href="../libs/jquery-ui.css" rel="stylesheet" />
+  <script src="../libs/jquery-ui.js"></script>
+  <script src="../search_api/abvphp_api.js"></script>
+  <script src="../search_api/fhl_api.js"></script>
+</head>
+<body>
+  <div id="re1"></div>
+  <span id="measure_length"></span>
+  
+  <!--<div style="display:inline-block;height:24px;border-style:dashed;border-width:thin;line-height:24px">
+    <div style="display:inline-block;border-style:dashed;border-width:thin;position:relative;min-width:150px;min-height:24px">
+      
+      <img src="play_progress_u614.png" style="position:absolute;top:6px;left:0;" width="150px" height="12px" />
+    </div>
+    <div style="display: inline-block; border-style: dashed; border-width: thin;vertical-align:top">
+      00:00
+    </div>
+  </div>-->
+  <script>
+    function init_dropdownlist(div_dropdownlist, items, item_init, fn_switch) {
+      var pfn_switch = fn_switch; // fn_switch(txt)
+
+      var div_main = div_dropdownlist;
+      div_main.innerHTML = "";
+      $(div_main).css("position", "relative");
+      $(div_main).css("display", "inline-block");//一開始還不要inline-blcok，不然寬度max_cx會算錯
+      $(div_main).css("vertical-align", "top");//一開始還不要inline-blcok，不然寬度max_cx會算錯
+
+      var div_cur = document.createElement("div");
+      div_main.appendChild(div_cur);
+      $(div_cur).css("display", "div");
+      $(div_cur).css("cursor", "pointer");
+      div_cur.innerText = item_init;
+
+      var div_items = document.createElement("div");
+      div_main.appendChild(div_items);
+      $(div_items).css("display", "inline-block");//一開始還不要隱藏，因為要取得max_cx，取得後再隱藏
+      $(div_items).css("position", "absolute");
+      $(div_items).css("left", "0px");
+      //$(div_items).css("top", $(div_cur).css("height"));//這裡算只會得到零,算出maxcy再指定吧
+      var max_cx = 0;
+      var max_cy = 0;
+      for (var idx in items) {
+        var item_text = items[idx];
+        var div_item = document.createElement("div");
+        div_item.innerText = item_text;
+        $(div_item).css("display", "inline-block");
+        if (idx != 0)
+          div_items.innerHTML += "<br/>";
+
+        $(div_item).css("z-index", "503");
+        $(div_item).css("cursor", "pointer");
+
+        div_items.appendChild(div_item);
+
+        // 算 max cx max cy
+        {
+          var $obj1 = $(document.getElementById("measure_length"));
+          $obj1.css("display", "inline-block");
+          $obj1.text(item_text);
+          console.log($obj1.width());
+          var cx = $obj1.width();
+          var cy = $obj1.height();
+          console.log(cy);
+          if (max_cx < cx)
+            max_cx = cx;
+          if (max_cy < cy)
+            max_cy = cy;
+          $obj1.css("display", "none");
+        }// 算 max cx max cy
+      }// for each items
+
+      $(div_cur).width(max_cx + 7);
+      $(div_items).width(max_cx + 7);
+      $(div_items).css("display", "none");//一開始還不要隱藏，因為要取得max_cx，取得後再隱藏
+      $(div_main).css("display", "inline-block");//一開始還不要inline-blcok，不然寬度max_cx會算錯
+      $(div_items).css("top", max_cy);//這裡算只會得到零,算出maxcy再指定吧
+
+      $(div_cur).css("text-align", "center");
+      $(div_items).css("text-align", "center");
+      $(div_items).css("background-color", "white");
+      $(div_items).css("z-index", "500");
+
+      $(div_items).find("div").each(function () {
+        $(this).width(max_cx + 7);
+        $(this).click(function () {
+          $(div_cur).text($(this).text());
+          if ( pfn_switch != null )
+            pfn_switch($(this).text());
+          //隱藏起來
+          $(div_items).css('display', 'none');
+          //$(div_items).animate({ display: 'none' }, 300, 'easeOutBack');
+        });
+      });
+
+      $(div_cur).click(function () {
+        // 彈出選單
+        $(div_items).css('display', 'inline-block');
+      });
+    }
+  </script>
+  <script>
+
+
+    // 2 要變 002 就用 pad(2,3);
+    function pad(num, size) {
+      var s = "000000000" + num;
+      return s.substr(s.length - size);
+    }
+
+    // 給 fn_unv1 fn_tcv 用的 (他們只有root不一樣)
+    function fn_read_bible_common_filename1(ibook, ichap) {
+      // <source id="mp3" src="http://media.fhl.net/unv1/2/2_004.mp3" type="audio/mpeg"> 出埃及記
+      // <source id="mp3" src="http://media.fhl.net/unv1/40/40_001.mp3" type="audio/mpeg"> 馬太福音
+      var filename = (ibook + 1).toString() + "/" + (ibook + 1).toString() + "_" + pad(ichap + 1, 3) + ".mp3";
+
+      //// next
+      //var filenamenx = "";
+      //var ibooknx = ibook;
+      //var ichapnx = ichap + 1;
+      //var cnum = fhl.get_chap_count(ibook);
+      //if (ichapnx >= cnum) {
+      //  ibooknx = ibooknx + 1;
+      //  ichapnx = 0;
+      //}
+      //if (ibooknx < 66)
+      //  filenamenx = (ibooknx + 1).toString() + "/" + (ibooknx + 1).toString() + "_" + pad(ichapnx + 1, 3) + ".mp3";
+
+      //// prev
+      //var filenamepv = "";
+      //var ibookpv = ibook;
+      //var ichappv = ichap - 1;
+      //if (ichappv == -1) {
+      //  if (ibookpv == 0)
+      //    ibookpv = -1;
+      //  else {
+      //    ibookpv = ibookpv - 1;
+      //    ichappv = fhl.get_chap_count(ibookpv) - 1;
+      //  }
+      //}
+      //if (ibookpv != -1)
+      //  filenamepv = (ibookpv + 1).toString() + "/" + (ibookpv + 1).toString() + "_" + pad(ichappv + 1, 3) + ".mp3";
+
+      // return 
+      var re1 = {};
+      re1.cur =  filename;
+      //if (filenamenx.length != 0)
+      //  re1.next =  filenamenx;
+      //if (filenamepv.length != 0)
+      //  re1.prev = filenamepv;
+      return re1;
+    }
+
+    // 0-based ibook ichap (和合本)
+    function fn_unv1(ibook, ichap) {
+      // <source id="mp3" src="http://media.fhl.net/unv1/2/2_004.mp3" type="audio/mpeg"> 出埃及記
+      // <source id="mp3" src="http://media.fhl.net/unv1/40/40_001.mp3" type="audio/mpeg"> 馬太福音
+      var root1 = "http://media.fhl.net/unv1/";
+
+      var re2 = fn_read_bible_common_filename1(ibook, ichap);
+
+      // return 
+      var re1 = {};
+      re1.cur = root1 + re2.cur;
+      //if ( re2.next != null )
+      //  re1.next = root1 + re2.next;
+      //if ( re2.prev != null )
+      //  re1.prev = root1 + re2.prev;
+      return re1;
+    }
+    // 0-based ibook ichap (現代中文譯本)
+    function fn_tcv(ibook, ichap) {
+      //<source id="mp3" src="http://media.fhl.net/tcv/40/40_001.mp3" type="audio/mpeg">
+      //<source id="mp3" src="http://media.fhl.net/tcv/40/40_002.mp3" type="audio/mpeg">
+      //<source id="mp3" src="http://media.fhl.net/tcv/1/1_002.mp3" type="audio/mpeg">
+
+      var root1 = "http://media.fhl.net/tcv/";
+
+      var re2 = fn_read_bible_common_filename1(ibook, ichap);
+
+      // return 
+      //var re1 = {};
+      //re1.cur = root1 + re2.cur;
+      //if (re2.next != null)
+      //  re1.next = root1 + re2.next;
+      //if (re2.prev != null)
+      //  re1.prev = root1 + re2.prev;
+      return re1;
+    }
+
+    //console.log (fn_unv1(0, 0));
+    //console.log(fn_tcv(0, 0));
+
+    var versions = [];
+    versions.push({
+      na: '和合本'
+      , fn: fn_unv1
+    });
+    versions.push({
+      na: '現代中文譯本'
+      , fn: fn_tcv
+    });
+    var cur_idx = 0; //和合本
+
+    function create_audio_div(vobj, ibook, ichap) {
+      var divs = {};
+      
+      var div_main = document.createElement("div");
+      divs.main = div_main;
+      $(div_main).css("display", "inline-block");
+      $(div_main).css("height", "24px");
+      $(div_main).css("marging", "0px");
+      $(div_main).css("padding", "0px");
+
+      //var dom_audio = '<audio src="'+  +'" type="audio/mpeg" controls="controls">your browser not support html5 audio tag.</audio>';
+      var dom_audio = document.createElement("audio");
+      divs.dom_audio = dom_audio;
+      div_main.appendChild(divs.dom_audio);
+      var mp3param = vobj.fn(ibook,ichap);
+      $(dom_audio).attr('src', mp3param.cur);
+      $(dom_audio).attr('type', 'audio/mpeg');
+      $(dom_audio).attr('controls', 'controls');
+      $(dom_audio).css('display', 'none');
+      dom_audio.innerText = 'your browser not support html5 audio tag.';
+      
+      var div_control = document.createElement("div");
+      divs.control = div_control;
+      div_main.appendChild(div_control);
+      $(div_control).css("display","inline-block");
+      $(div_control).css("height", "24px");
+      //$(div_control).css("margin", "0px");
+      //$(div_control).css("padding", "0px");
+      //$(div_control).css("vertical-align", "top");
+
+
+      // play next prev
+      var div_prev = document.createElement("div");
+      var div_play = document.createElement("div");
+      var div_pause = document.createElement("div");
+      var div_next = document.createElement("div");
+      {
+        div_control.appendChild(div_prev);
+        div_control.appendChild(div_play);
+        div_control.appendChild(div_pause);
+        div_control.appendChild(div_next);
+
+        $(div_prev).css("display", "inline-block");
+        $(div_prev).css("height", "24px");
+        $(div_play).css("display", "inline-block");
+        $(div_play).css("height", "24px");
+        $(div_pause).css("display", "inline-block");
+        $(div_pause).css("height", "24px");
+        $(div_next).css("display", "inline-block");
+        $(div_next).css("height", "24px");
+
+        var img_next = document.createElement("img");
+        $(img_next).attr("src", "next_u607.png");
+        $(img_next).attr("height", "100%");
+        var img_play = document.createElement("img");
+        $(img_play).attr("src", "play_pause_u609.png");
+        $(img_play).attr("height", "100%");
+        var img_pause = document.createElement("img");
+        $(img_pause).attr("src", "play_pause_u609_selected.png");
+        $(img_pause).attr("height", "100%");
+        $(div_pause).css("display", "none");
+        var img_prev = document.createElement("img");
+        $(img_prev).attr("src", "prev_u607.png");
+        $(img_prev).attr("height", "100%");
+
+        div_prev.appendChild(img_prev);
+        div_next.appendChild(img_next);
+        div_play.appendChild(img_play);
+        div_pause.appendChild(img_pause);
+
+        $(div_play).click(this, function (param) {
+          dom_audio.play();
+          $(div_play).css("display", "none");
+          $(div_pause).css("display", "inline-block");
+        });
+
+        $(div_pause).click(this, function (param) {
+          dom_audio.pause();
+          //$(this).css("display", "none");
+          //$(div_play).css("display", "inline-block");
+
+          $(div_pause).css("display", "none");
+          $(div_play).css("display", "inline-block");
+          $(div_progress).css("display", "none");
+        });
+
+        $(div_next).click(this, function (param) {
+          var nxt = fhl.get_next_chap(ibook, ichap);
+          if (nxt == null)
+            return;
+
+          var nextdivs = create_audio_div(vobj, nxt.ibook, nxt.ichap);
+          
+          // 取代舊的
+          var pParent = div_main.parentNode;
+          pParent.insertBefore(nextdivs.main, div_main);
+          var paused = dom_audio.paused; //要在removeChild之前存起來，不然都會變true
+          pParent.removeChild(div_main);
+
+          // 若已經在播放了，按next就自動播放
+          //if ( dom_audio.paused == false)
+            nextdivs.dom_audio.play();
+        });
+
+        $(div_prev).click(this, function (param) {
+          var nxt = fhl.get_prev_chap(ibook, ichap);
+          if (nxt == null)
+            return;
+
+          var nextdivs = create_audio_div(vobj, nxt.ibook, nxt.ichap);
+
+          // 取代舊的
+          var pParent = div_main.parentNode;
+          pParent.insertBefore(nextdivs.main, div_main);
+          var paused = dom_audio.paused; //要在removeChild之前存起來，不然都會變true
+          pParent.removeChild(div_main);
+
+          // 若已經在播放了，按next就自動播放
+          if (paused == false)
+            nextdivs.dom_audio.play();
+        });
+
+      }// play next prev
+      
+      var div_progress = document.createElement("div");
+      divs.div_progress = div_progress;
+      $(div_progress).css("display", "inline-block");
+      div_main.appendChild(div_progress);
+
+      {
+        var div_pbar = document.createElement("div");
+        divs.div_pbar = div_pbar;
+        div_progress.appendChild(div_pbar);
+        $(div_pbar).css("display", "inline-block");
+        $(div_pbar).css("position", "relative");
+        $(div_pbar).css("min-width", "150px");//沒加這個. 字會在bar的起頭
+        $(div_pbar).css("min-height", "24px");
+        
+        var img_barback = document.createElement("img");
+        $(img_barback).attr("src", "play_progress_u614.png");
+        $(img_barback).attr("width", "150px");
+        $(img_barback).attr("height", "12px");
+        $(img_barback).css("position", "absolute");
+        $(img_barback).css("top", "6px");
+        $(img_barback).css("z-index", "-2");
+        div_pbar.appendChild(img_barback);
+
+        
+        var img_barpt = document.createElement("img");
+        divs.img_barpt = img_barpt;
+        $(img_barpt).attr("src", "play_progress_pointer_u616.png");
+        $(img_barpt).attr("width", "12px");
+        $(img_barpt).attr("height", "12px");
+        $(img_barpt).css("top", "6px");
+        $(img_barpt).css("position", "absolute");
+        $(img_barpt).css("z-index", "2");
+        div_pbar.appendChild(img_barpt);
+        
+        $(img_barpt).draggable({
+          containment: "parent"
+          , axis: "x"
+          , start: function () {
+            dom_audio.pause();
+          }
+          , drag: function () {
+            
+          }
+          , stop: function () {
+
+            var duration = dom_audio.duration;
+            var left2 = parseFloat($(divs.img_barpt).css("left"));
+            var currentTime = left2 * duration / (150.0 - 12.0);
+
+            //不然會自動跳到下一首 (拖曳應該不要跳到下一首)
+            if (currentTime >= duration)
+              currentTime = duration - 1;
+
+            dom_audio.currentTime = currentTime;
+            dom_audio.play();
+          }
+        });
+      }
+
+      {//倒數秒數
+        var div_time = document.createElement("div");
+        div_progress.appendChild(div_time);
+        divs.div_time = div_time;
+        $(div_time).text("00:00");
+        $(div_time).css("vertical-align", "top");
+        $(div_time).css("display", "inline-block");
+        $(div_time).css("height","24px");
+        $(div_time).css("min-height","24px");
+      }//倒數秒數
+
+      {// 版本切換
+        var div_dropdown = document.createElement("div");
+        div_progress.appendChild(div_dropdown);
+        
+        var vvs = [];
+        for (var i2 in versions)
+        {
+          console.log(versions[i2]);
+          vvs.push(versions[i2].na);
+        }
+
+        //var versions = [];
+        //versions.push({
+        //  na: '和合本'
+        //  , fn: fn_unv1
+        //});
+        //versions.push({
+        //  na: '現代中文譯本'
+        //  , fn: fn_tcv
+        //});
+        //var cur_idx = 0; //和合本
+
+        var pfn_switch = function (txt)
+        {
+          for (var idx in versions) {
+            var txt2 = versions[idx];
+            if (txt2 == txt) {
+              cur_idx = idx;
+              set_book_chap( versions[idx], ibook, ichap);
+              break;
+            }
+          }
+        }
+
+        init_dropdownlist(div_dropdown, vvs, vvs[0], pfn_switch);
+      }
+
+      $(dom_audio).on('ended', null, this, function (param) {
+        // ended 自動播放下一首.
+        $(div_next).trigger('click', this);
+      }).on('timeupdate', null, this, function (param) {
+        // 播放過程, 進度列更新.
+        var duration = dom_audio.duration;
+        var currentTime = dom_audio.currentTime;
+        $(divs.img_barpt).css("left", (currentTime / duration * (150 - 12)).toString() + "px");
+        // 秒轉為 H:m:s
+        {
+          var sec1 = duration - currentTime;
+          var re_str = "-";
+          if ( sec1 > 3600 )
+          {
+            var hours = Math.floor(sec1 / 3600).toString();
+            sec1 = sec1 % 3600;
+            re_str = hours + ":";
+          }
+          var mins = Math.floor( sec1 / 60 ).toString();
+          sec1 = sec1 % 60;
+          var sec = Math.floor(sec1).toString();
+          $(divs.div_time).text(re_str + mins + ":" + sec);
+        }
+      }).on('play', null, this, function (param) {
+        // 開始播放. 隱藏與隱示
+        $(div_pause).css("display", "inline-block");
+        $(div_play).css("display", "none");
+        $(div_progress).css("display", "inline-block");
+      }).on('pause', null, this, function (param) {
+      }).on('seeked', null, this, function (param) {
+      });
+
+      //seeked
+      
+      
+
+      return divs;
+    }
+
+    function set_book_chap(ibook, ichap) {
+      var vobj = versions[cur_idx];
+      var divs = create_audio_div(vobj,ibook,ichap);
+
+      // document.write(divs.main.outerHTML); //這個外表雖然一樣，但結果不同，因為他不會包含click等資訊.要用append
+      document.getElementById("re1").appendChild(divs.main);
+    }
+
+    set_book_chap(0, 0);
+    
+  </script>
+
+
+  <!--<div id="drag_range" style="width: 200px;height:40px;position:relative">
+    <img id="drag_obj" src="play_progress_pointer_u616.png" style="position:absolute" />
+    <img src="play_progress_u614.png" style="position: absolute; left: 0; width: 100%; height:100%; z-index: -2; position: absolute" />
+  </div>
+  
+  <script>
+    var $drag_range = $(document.getElementById("drag_range"));
+    var $drag_obj = $(document.getElementById("drag_obj"));
+    $drag_obj.draggable({
+      containment: "parent"
+      , axis: "x"
+      , start: function () {
+        console.log('start 拖曳已開始');
+      }
+      , drag: function () {
+          console.log('drag 拖曳過程 連續一直觸發');
+      }
+      , stop: function () {
+          console.log('stop 放開左鍵. 拖曳結束');
+      }
+    });
+
+    {
+      var tmp1 = ($drag_obj.parent().height() - $drag_obj.height()) / 2;
+      $drag_obj.css("top", tmp1);
+    }
+    
+  </script>-->
+
+
+  <!--//$(audiospan).find('.audiopbar_p').draggable({
+  //  containment: $(audiospan).find(".audiopbar"),
+  //  start: function () {
+  //    console.log('start');
+  //    //$("#drag p").html("<p>用滑鼠拖曳</p>拖曳已開始!");
+  //    audioobj.stop();
+  //  },
+  //  drag: function () {
+  //    console.log('drag');
+  //    //count++;
+  //    //$("#info").html("拖曳事件已觸發了 " + count + " 次");
+  //  },
+  //  stop: function () {
+  //    console.log('stop');
+  //    //$("#drag p").html("<p>用滑鼠拖曳</p>拖曳已停止!");
+  //  }
+  //});-->
+
+
+  <!--
+    <div class="audioobj">
+    <span style="cursor:pointer;width:24px" class="audioplay">
+      <img src="play_pause_u609.png" style="width:27px"/>
+    </span>
+
+    <span class="audiopbar" style="width:300px;display:inline-block;position:relative">
+      <span class="audiopbar_p" style="position:absolute;width:10px;left:0px">
+        <img src="play_progress_pointer_u616.png" style="width:100%;height:100%"/>
+      </span>
+
+      <img src="play_progress_u614.png" style="position:absolute;left:0;width:100%;z-index:-2"/>
+      <span class="audiodt" style="z-index:-2">00:00</span>
+    </span>
+
+    <br />
+    <audio src="http://media.fhl.net/unv1/40/40_002.mp3" type="audio/mpeg" controls="controls">
+      your browser not support html5 audio tag.
+    </audio>
+    </div>
+    -->
+
+  <!--<script>
+    $(function () {
+      $('.audioobj').each(function (){
+
+        var audiospan = this; // 一整個單位 (自訂的audioobj)
+        var audioobj = $(audiospan).find('audio')[0]; // html5 audio 物件
+        var audiopbar = $(audiospan).find('.audiopbar')[0];
+        var audiopbar_p = $(audiopbar).find('.audiopbar_p')[0];
+        var audiodt = $(audiopbar).find('.audiodt')[0];
+        
+        $(audiospan).find('.audioplay').click(audioobj, function (pdata) {
+          pdata.data.play();//播放
+        });
+
+        // 加入 audio 的各事件
+        $(audioobj).on('play', '', null, function (event) {
+          //Script to be run when the media is ready to start playing
+        }).on('timeupdate', '', null, function (event) {
+          // 進度列 靠這個事件
+          $(audiopbar_p).css('left',
+            ($(audiopbar).width() - $(audiopbar_p).width())
+            * audioobj.currentTime / audioobj.duration);
+        });
+
+        // 拖曳進度
+        $(audiospan).find('.audiopbar_p').draggable({
+          containment: $(audiospan).find(".audiopbar"),
+          start: function () {
+            console.log('start');
+            //$("#drag p").html("<p>用滑鼠拖曳</p>拖曳已開始!");
+            audioobj.stop();
+          },
+          drag: function () {
+            console.log('drag');
+            //count++;
+            //$("#info").html("拖曳事件已觸發了 " + count + " 次");
+          },
+          stop: function () {
+            console.log('stop');
+            //$("#drag p").html("<p>用滑鼠拖曳</p>拖曳已停止!");
+          }
+        });
+      },null);
+    });// audioobj each 
+  </script>-->
+
+  <!--<div id="bible_audio_mp3">
+    <div>prev
+      <img src="next_u607.png" />
+      <img src="play_pause_u609_selected.png" width="64" /></div>
+    <div>play
+      <img src="play_pause_u609.png" width="64" /></div>
+    <div>next
+      <img src="next_u607.png" width="64" /></div>
+    <div>progress</div>
+    <div>version</div>
+  </div>-->
+</body>
+</html>

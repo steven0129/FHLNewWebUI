@@ -1,0 +1,259 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+  <script src="../libs/jquery-1.10.2.js"></script>
+  <link href="../libs/jquery-ui.css" rel="stylesheet" />
+  <script src="../libs/jquery-ui.js"></script>
+  <script src="../search_api/fhl_api.js"></script>
+</head>
+<body>
+  <div id="re1"></div>
+  <script>
+    //// http://bkbible.fhl.net/json/sc.php?book=8&engs=Gen&chap=1&sec=1
+    //// {"status":"success","record_count":1,"prev":{"book":"8","engs":"Gen","chap":0,"sec":0},"next":{"book":"8","engs":"Gen","chap":1,"sec":2},"record":[{"title":"\u5275\u4e16\u8a18 1\u7ae01\u7bc0 \u5230 1\u7ae01\u7bc0","book_name":"\u8521\u8302\u5802\u7267\u5e2b\u8b1b\u9053","com_text":"\u5b87\u5b99\u4e4b\u958b\u653e\u6027\u53ca\u4f9d\u5b58\u6027\r\n\u4e0a\u5e1d\u4e4b\u8d85\u7136, \u4e3b\u6b0a\u3001\u80fd\u529b\u3001\u667a\u6167 \r\n\u4e0a\u5e1d\u4e4b\u5b58\u5728\u4e43\u4fe1\u5fc3\u5ba3\u544a\r\n\u795e\u8e5f\u4e4b\u7406\u8ad6\u53ef\u80fd\u6027\r\n[media$N01_001_001_001_001_t.m3u]\uff08\u53f0\u8a9e\uff09\r\n[media$N01_001_001_001_001_m.m3u]\uff08\u83ef\u8a9e\uff09\r\n\r\n"}]}
+    //var r1 = '{"status":"success","record_count":1,"prev":{"book":"8","engs":"Gen","chap":0,"sec":0},"next":{"book":"8","engs":"Gen","chap":1,"sec":2},"record":[{"title":"\u5275\u4e16\u8a18 1\u7ae01\u7bc0 \u5230 1\u7ae01\u7bc0","book_name":"\u8521\u8302\u5802\u7267\u5e2b\u8b1b\u9053","com_text":"\u5b87\u5b99\u4e4b\u958b\u653e\u6027\u53ca\u4f9d\u5b58\u6027\r\n\u4e0a\u5e1d\u4e4b\u8d85\u7136, \u4e3b\u6b0a\u3001\u80fd\u529b\u3001\u667a\u6167 \r\n\u4e0a\u5e1d\u4e4b\u5b58\u5728\u4e43\u4fe1\u5fc3\u5ba3\u544a\r\n\u795e\u8e5f\u4e4b\u7406\u8ad6\u53ef\u80fd\u6027\r\n[media$N01_001_001_001_001_t.m3u]\uff08\u53f0\u8a9e\uff09\r\n[media$N01_001_001_001_001_m.m3u]\uff08\u83ef\u8a9e\uff09\r\n\r\n"}]}';
+    //r1 = r1.replace(new RegExp('\\r','g'), '');
+    //r1 = r1.replace(new RegExp('\\n', 'g'), '\\n');
+    //var jr1 = JSON.parse(r1);
+    //console.log(jr1.record[0].com_text);
+
+  </script>
+
+  <script>
+    //var jsc = {
+    //  next: { book: "8", engs: "Gen", chap: 0, sec: 0 },
+    //  prev: { book: "8", engs: "Gen", chap: 1, sec: 2 },
+    //  record: [{
+    //    title:"\u5275\u4e16\u8a18 1\u7ae01\u7bc0 \u5230 1\u7ae01\u7bc0",
+    //    book_name: "\u8521\u8302\u5802\u7267\u5e2b\u8b1b\u9053",
+    //    com_text: '\u5b87\u5b99\u4e4b\u958b\u653e\u6027\u53ca\u4f9d\u5b58\u6027\\n\u4e0a\u5e1d\u4e4b\u8d85\u7136, \u4e3b\u6b0a\u3001\u80fd\u529b\u3001\u667a\u6167 \\n\u4e0a\u5e1d\u4e4b\u5b58\u5728\u4e43\u4fe1\u5fc3\u5ba3\u544a\\n\u795e\u8e5f\u4e4b\u7406\u8ad6\u53ef\u80fd\u6027\\n[media$N01_001_001_001_001_t.m3u]\uff08\u53f0\u8a9e\uff09\\n[media$N01_001_001_001_001_m.m3u]\uff08\u83ef\u8a9e\uff09\\n\\n'
+    //    }],
+    //};
+    
+    // sc.php book 8 9 10
+    var scphp = scphp || {};
+    scphp.c_preach_frame = function () { };//declare class
+    scphp.c_preach_frame.prototype.m_id = "preach"; // preach8 preach9 preach10
+    scphp.c_preach_frame.prototype.bookid = -1;
+    scphp.c_preach_frame.prototype.pdiv = null;
+    scphp.c_preach_frame.prototype.m_views = [];//放 c_preach_view obj
+    scphp.c_preach_frame.prototype.next = {};//供 onclick 用的參數
+    scphp.c_preach_frame.prototype.prev = {};//供 onclick 用的參數
+    scphp.c_preach_frame.prototype.divbooknames = [];// 用這個來設定 class (css) 用的 (有幾筆record就會有幾個陣列)
+    scphp.c_preach_frame.prototype.divtitles = [];// 用這個來設定 class (css) 用的
+    scphp.c_preach_frame.prototype.divnexts = [];// 用這個來設定 class (css) 用的 
+    scphp.c_preach_frame.prototype.divprevs = [];// 用這個來設定 class (css) 用的 
+
+    // scphp.set 會呼叫
+    scphp.c_preach_frame.prototype.set = function (engbook, chap, sec) {
+      //var url = 'sc.php?book=8&engs=Gen&chap=1&sec=1';
+      var url = 'sc.php?book='+this.bookid+'&engs='+engbook+'&chap='+chap+'&sec='+sec;
+
+      var api_obj = {};
+      fhl.json_api_text(url,
+        function success(jstr, obj_param) {
+          try
+          {
+            var jscphp = JSON.parse(jstr);
+            obj_param["jret"] = jscphp;
+          }
+          catch(ex){} // json api 會有bug
+        },
+        function error(jstr, obj_param) {
+        },
+        api_obj, false);// json_api_text
+
+      if (api_obj["jret"] == undefined) {
+        this.pdiv = null;
+        return;
+      }
+      
+      // 清除div (設定css用的)
+      this.divbooknames = [];
+      this.divtitles = [];
+      this.divnexts = [];
+      this.divprevs = [];
+
+      // 開始處理
+      this.pdiv = document.createElement("div");
+      this.pdiv.id = this.m_id;
+
+      // 上一篇 與 下一篇
+      //console.debug("jret");
+      //console.log(api_obj.jret);
+      if (api_obj.jret["prev"] != undefined) {
+        this.prev["engs"] = api_obj.jret.prev.engs;
+        this.prev["chap"] = api_obj.jret.prev.chap;
+        this.prev["sec"] = api_obj.jret.prev.sec;
+      }
+      else
+        this.prev = {};
+      if (api_obj.jret["next"] != undefined) {
+        this.next["engs"] = api_obj.jret.next.engs;
+        this.next["chap"] = api_obj.jret.next.chap;
+        this.next["sec"] = api_obj.jret.next.sec;
+      }
+      else
+        this.next = {};
+      //console.debug("prev next");
+      //console.log(this);
+      
+
+      // 處理每一份 record
+      for(var idx in api_obj.jret.record)
+      {
+        var jrecord = api_obj.jret.record[idx];
+
+        var viewobj = new scphp.c_preach_view();
+        this.m_views.push(viewobj);
+
+        viewobj.pParent = this;
+        viewobj.pdiv = document.createElement("div");
+        this.pdiv.appendChild(viewobj.pdiv);
+
+        var divbookname = document.createElement("div"); //jrecord.book_name;
+        divbookname.innerText = jrecord.book_name;
+        viewobj.pdiv.appendChild(divbookname);
+
+        //css處理
+        this.divbooknames.push(divbookname) ;
+
+        // 下一篇 上一篇 (只在第1份record才加)
+        if (idx == 0) {
+          if (this.prev.engs != undefined) {
+            var divobj = document.createElement("span");
+            $(divobj).css('cursor', 'pointer');
+            divobj.innerText = "上一篇";
+            $(divobj).click(this, function (pdata) {
+              //console.debug('onclick pdata');
+              //console.log(pdata);
+
+              var pframe = pdata.data;
+              scphp.set(pframe.prev.engs, pframe.prev.chap, pframe.prev.sec);
+            });
+            viewobj.pdiv.appendChild(divobj);
+
+            //css處理
+            this.divnexts.push(divobj);
+          }
+
+          if (this.next.engs != undefined) {
+            var divobj = document.createElement("span");
+            divobj.innerText = "下一篇";
+            $(divobj).css('cursor', 'pointer');
+            $(divobj).click(this, function (pdata) {
+              //console.debug('onclick pdata');
+              //console.log(pdata);
+
+              var pframe = pdata.data;
+              scphp.set(pframe.next.engs, pframe.next.chap, pframe.next.sec);
+            });
+            viewobj.pdiv.appendChild(divobj);
+
+            //css處理
+            this.divnexts.push(divobj);
+          }
+        } // 下一篇 上一篇 (只在第1份record才加)
+
+        var divtitle = document.createElement("div"); //jrecord.title;
+        divtitle.innerText = jrecord.title;
+        viewobj.pdiv.appendChild(divtitle);
+        
+        //css處理
+        this.divtitles.push(divtitle);
+        
+
+        var divcomtext = document.createElement("div");
+        viewobj.m_div_com_text = divcomtext;
+        viewobj.pdiv.appendChild(divcomtext);
+        {
+          // 目前有3種case
+          // [media$N01_001_001_001_001_t.m3u]
+          // [media$N01_001_001_001_001_m.m3u]
+          // [media$1N01_001_001_001_001.m3u] ... /bookid/1/N01_001_001_001_001.mp3
+
+          var r1 = jrecord.com_text;
+          r1 = r1.replace(/\n/g, "<br />");
+          //var reg = new RegExp('\[media$[N0-9_tm]+.m3u\]', 'g');
+          var reg = new RegExp('\[media$[0-9/]*[N0-9_tm]+.m3u\]', 'g');
+          var r2 = r1.match(reg);
+          for (var i2 in r2) {
+
+            var str_ori = r2[i2];
+
+            var reg1 = new RegExp('[0-9/]*N[0-9_mt]+', 'g');
+            var str_na = reg1.exec(str_ori)[0]; // 'N01_001_001_001_001_t'
+            //console.debug("str_na");
+            //console.log(str_na);
+
+            // 產生mp3_url
+            var mp3_url = "http://media.fhl.net/cbolcom/" + this.bookid + "/" + str_na + ".mp3";
+
+            var html5_audio = "<audio src=\"" + mp3_url + "\" controls preload=\"none\" playbackRate=\"1\" >HTML5 audio not supported</audio>";
+            var html_download = "<a href=\"" + mp3_url + "\">下載</a>";
+
+            var html_audio_obj = html5_audio + html_download;
+
+            var html_out = "<span>" + html_audio_obj + "</span>";
+            r1 = r1.replace(str_ori, html_out);
+          }//for i2 in r2
+
+          divcomtext.innerHTML = r1;
+        }
+        //console.log(this);
+
+        
+      }
+    }; // scphp.c_preach_frame.prototype.set = function (engbook, chap, sec)
+
+    scphp.c_preach_view = function () { };//declare class 
+    scphp.c_preach_view.prototype.pParent = null;
+    scphp.c_preach_view.prototype.pdiv = null;
+    scphp.c_preach_view.prototype.m_div_book_name = null;
+    scphp.c_preach_view.prototype.m_div_title = null;
+    scphp.c_preach_view.prototype.m_div_com_text = null;
+    scphp.c_preach_view.prototype.m_audios = [];
+
+    scphp.c_preach_audio = function () { };//declare class
+    scphp.c_preach_audio.prototype.pParent = null;
+    scphp.c_preach_audio.prototype.pdiv = null;
+    scphp.c_preach_audio.prototype.filename = "";//N01_001_001_001_001_t.mp3
+    scphp.c_preach_audio.prototype.src = "";//http://media.fhl.net/cbolcom/8/N01_001_001_001_001_t.mp3
+
+    // 全域變數
+    scphp.g_preach_frames = [
+      new scphp.c_preach_frame(),
+      new scphp.c_preach_frame(),
+      new scphp.c_preach_frame()
+    ];
+    scphp.g_preach_frames[0].m_id += '8'; //preach8
+    scphp.g_preach_frames[1].m_id += '9'; //preach9
+    scphp.g_preach_frames[2].m_id += '10'; //preach10
+    scphp.g_preach_frames[0].bookid = 8;
+    scphp.g_preach_frames[1].bookid = 9;
+    scphp.g_preach_frames[2].bookid = 10;
+    
+
+    // 程式進入點 set (外部呼叫,或是內部按next)
+    scphp.set = function set(engBook, chap, sec)
+    {
+      var rediv = document.getElementById("re1");
+      rediv.innerText = "";
+
+      for (var idx in scphp.g_preach_frames) {
+        scphp.g_preach_frames[idx].set(engBook, chap, sec);
+        if (scphp.g_preach_frames[idx].pdiv != null)//若本章本節有資料
+        {
+          rediv.appendChild(scphp.g_preach_frames[idx].pdiv);
+        }
+      }//for each 8 9 10
+    };// 程式進入點 set
+    
+    //book=8&engs=Gen&chap=1&sec=1
+    scphp.set('Gen', 1, 1);
+    scphp.set('Gen', 1, 8);
+  </script>
+</body>
+</html>

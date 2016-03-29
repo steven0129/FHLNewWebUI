@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+  <script src="../libs/jquery-1.10.2.js"></script>
+  <script src="../libs/linq.js_ver2.2.0.2/linq.min.js"></script>
+  <script src="../libs/linq.js_ver2.2.0.2/jquery.linq.min.js"></script>
+  <script src="abvphp_api.js"></script>
+  <script src="fhl_api.js"></script>
+  <link href="search.css" rel="stylesheet" />
+  <script src="qsbphp.create_color_span_from_bible_text.js"></script>
+  <script src="sephp.se_record_2_qsb_str.js"></script>
+  <script src="qsbphp.search_reference.js"></script>
+  <script src="sephp.pre_search_sn.js"></script>
+  <script src="sephp.pre_search_keyword.js"></script>
+  <script src="sephp.create_dialog_presearch.js"></script>
+  <script src="sephp.create_dialog_search_result.js"></script>
+  <script src="sephp.search.js"></script>
+</head>
+<body>
+  <input type="text" id="keyword" value="當把" >
+    <div style="width:600px;height:300px">
+        <div id="pre_search" style="font-size:10pt"></div>
+        <div id="search_result" style="font-size:10pt;overflow-y:scroll"></div>
+    </div>
+  <script>
+    var vers = ['unv', 'recover'];
+    var issn = true;
+    var isgb = false; 
+    sephp.node_pre_search = document.getElementById("pre_search");
+    sephp.node_search_result = document.getElementById("search_result");
+    sephp.act_sn_button_click = function (pdata) {
+      var ninput = document.getElementById("keyword");
+      $(ninput).val(sephp.keyword);
+    };
+    sephp.act_ref_button_click = function (pdata) {
+      /// <summary> 跳至章節, 設定</summary>
+      var engs = pdata.data.engs;
+      var chap = pdata.data.chap;
+      var sec = pdata.data.sec;
+      var ver = pdata.data.ver;
+      
+    };
+    //sephp.search("當把", issn, isgb , vers);
+    //sephp.search("5723", issn,isgb);
+    //sephp.search("# Ge 21:2-5; Jos 24:2,3; 1Ch 1:28; Isa 51:2; Lu 3:34; Ac 7:8|", issn, isgb, vers, "Ex");
+    $(function () {
+      var ninput = document.getElementById("keyword");
+      $(ninput).keydown(null, function (pdata) {
+        if ( pdata.keyCode == 13 )
+        {
+          var keyword = $(ninput).val();
+          if (keyword == null || keyword.length == 0) { }
+          else
+            sephp.search(keyword ,issn,isgb, vers);
+        }
+      });
+    });
+
+  </script>
+
+</body>
+</html>

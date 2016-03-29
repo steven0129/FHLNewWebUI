@@ -1,0 +1,201 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--link rel="stylesheet" href="./libs/jquery-ui.css"-->
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+<script src="./libs/jquery-1.10.2.js"></script>
+<script src="./libs/constant.js"></script>
+<script src="./libs/fhlAPI.js"></script>
+<script>
+
+var fhlData=fhlData||{};
+$(function(){
+	fhlData={
+		getBibleVersionData:null,
+	};
+	fhlAPI.getBibleVersion(function(d){
+		fhlData.getBibleVersionData=d;
+		var html="";
+		d.record.forEach(function(d,i,a){
+			html+="<option value="+d.book+">"+d.cname+"</option>";
+		});
+		$("#version").html(html);
+		d.record.forEach(function(d,i,a){
+			$("#version").find('option:eq('+i+')').attr("strong",d.strong);
+		});
+	});
+	$("#version").change(function(){		
+		if(parseInt($(this).find(":selected").attr("strong"))==0){
+			$("#strong").val(0);
+			$("#strong").attr("disabled",true);
+		}else{
+			$("#strong").attr("disabled",false);
+		}
+	});
+	$("#bibleVersionTest").click(function(){
+		bibleVersionTest();
+	});	
+	$("#bibleTextTest").click(function(){
+		//bibleTextTest();
+	});
+	$("#bibleParsingTest").click(function(){
+		bibleParsingTest();
+	});
+	$("#bibleCommentTest").click(function(){
+		bibleCommentTest();
+	});	
+});
+
+function bibleVersionTest(){
+	fhlAPI.getBibleVersion(function(d){
+		var ret="";
+		var func="bibleVersionTest";
+		if(d.status!="success"){
+			ret=func+" failed - status error!";
+			$("#json").html(ret);
+			return;
+		}
+		if(d.record_count==0){
+			ret=func+" failed - record count is 0!";
+			$("#json").html(ret);
+			return;
+		}else{
+			d.record.forEach(function(d,i,a){
+				if(typeof(d.book)!=="string"){					
+					ret=func+" failed - record "+i+": book error!";
+					$("#json").html(ret);			
+					return;
+				}
+				if(typeof(d.cname)!=="string"){
+					ret=func+" failed - record "+i+": cname error!";
+					$("#json").html(ret);			
+					return;
+				}
+				if(typeof(d.proc)!=="number"||d.proc<0||d.proc>3){
+					ret=func+" failed - record "+i+": proc error!";
+					$("#json").html(ret);			
+					return;
+				}
+				if(typeof(d.strong)!=="number"||d.strong<0||d.strong>1){
+					ret=func+" failed - record "+i+": strong error!";
+					$("#json").html(ret);			
+					return;
+				}
+				if(typeof(d.ntonly)!=="number"||d.ntonly<0||d.ntonly>1){
+					ret=func+" failed - record "+i+": ntonly error!";
+					$("#json").html(ret);			
+					return;
+				}
+				if(typeof(d.otonly)!=="number"||d.otonly<0||d.otonly>1){
+					ret=func+" failed - record "+i+": otonly error!";
+					$("#json").html(ret);			
+					return;
+				}				
+			});
+		}
+		ret=func+" success!";
+		$("#json").html(ret);
+	});
+}
+
+function bibleTextTest(){	
+	/*Bible Text Test*/	
+	var getBibleTextSetup={
+		chineses:null,
+		chap:1,
+		sec:null,
+		strong:0,
+		gb:0,
+		version:null
+	};
+	var getBibleTextCBK=function(d){
+
+		/*$("#json").append(text+"<br>");*/
+	};
+	
+	/* Whole Chapter Check */
+	getBibleTextSetup.version=$("#version").val();
+	if(getBibleTextSetup.version=="ncv"){
+		return;	
+	}
+	BOOK_ABBR_CHI.forEach(function(d,i,a){
+		getBibleTextSetup.chineses=d;				
+		for(var idx=1;idx<=BOOK_CHAPTER_NUM[i];idx++){
+			getBibleTextSetup.chap=idx;
+			fhlAPI.getBibleText(getBibleTextCBK,getBibleTextSetup);
+		}				
+	});
+}
+
+function bibleParsingTest(){
+	var getBibleParsingSetup={
+		engs:null,
+		chap:1,
+		sec:1,
+		gb:0,
+	};	
+	var getBibleParsingCBKOK=function(d,params){		
+	};
+	var getBibleParsingCBKFail=function(d,params){		
+		var text=d.url+":"+" Failed"+"<br/>";
+		$("#json").append(text);
+	};
+	BOOK_ABBR_ENG.forEach(function(d,i,a){		
+		getBibleParsingSetup.engs=d;
+		for(var idx=1;idx<=BOOK_CHAPTER_NUM[i];idx++){
+			getBibleParsingSetup.chap=idx;			
+			fhlAPI.getBibleParsing(getBibleParsingCBKOK,getBibleParsingCBKFail
+				,getBibleParsingSetup);
+		}
+	});	
+}
+
+function bibleCommentTest(){
+	var getBibleCommentSetup={
+		book:3,		
+		engs:null,
+		chap:1,
+		sec:1,
+		gb:0,
+	};	
+	var getBibleCommentCBKOK=function(d,params){		
+	};
+	var getBibleCommentCBKFailed=function(d,params){		
+		var text=d.url+":"+" Failed"+"<br/>";
+		$("#json").append(text);
+	};
+	BOOK_ABBR_ENG.forEach(function(d,i,a){		
+		getBibleCommentSetup.engs=d;
+		for(var idx=1;idx<=BOOK_CHAPTER_NUM[i];idx++){
+			getBibleCommentSetup.chap=idx;			
+			fhlAPI.getBibleComment(getBibleCommentCBKOK,getBibleCommentCBKFailed
+				,getBibleCommentSetup);
+		}
+	});	
+}
+</script
+</head>
+<body>
+<div>
+	<select id="version"></select>
+	<select id="strong">
+		<option value=0>SN 關</option>
+		<option value=1>SN 開</option>
+	</select>
+	<select id="gb">
+		<option value=0>正體</option>
+		<option value=1>簡體</option>
+	</select>	
+	<input id="bibleVersionTest" type="button" value="Bible Version Test"/>
+	<input id="bibleTextTest" type="button" value="Bible Text Test"/>
+	<input id="bibleParsingTest" type="button" value="Bible Parsing Test"/>
+	<input id="bibleCommentTest" type="button" value="Bible Comment Test"/>
+</div>
+<a class="pure-button" href="#">A Pure Button</a>
+<button class="pure-button">A Pure Button</button>
+<div id="xml"></div>
+<br/>
+<div id="json"></div>
+</body>
+</html>

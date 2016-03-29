@@ -1,0 +1,99 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+  <script src="../libs/jquery-1.10.2.js"></script>
+  <link href="../libs/jquery-ui.css" rel="stylesheet" />
+  <script src="../libs/jquery-ui.js"></script>
+  <style>
+    div{
+      border-style:solid;
+      border-width:thin;
+    }
+  </style>
+</head>
+<body>
+  <div id="audio_bible_switch"  class="dropdownlist"></div>
+  efhwehifuhweuifhuiawhuiefh<br/>
+  efhwehifuhweuifhuiawhuiefh<br />
+  efhwehifuhweuifhuiawhuiefh<br />efhwehifuhweuifhuiawhuiefh<br />efhwehifuhweuifhuiawhuiefh<br />efhwehifuhweuifhuiawhuiefh<br />
+  <script>
+    function init_dropdownlist(div_dropdownlist,items,item_init)
+    {
+      var div_main = div_dropdownlist;
+      div_main.innerHTML = "";
+      $(div_main).css("position", "relative");
+      //$(div_main).css("display", "inline-block");//一開始還不要inline-blcok，不然寬度max_cx會算錯
+
+      var div_cur = document.createElement("div");
+      div_main.appendChild(div_cur);
+      div_cur.innerText = item_init;
+      $(div_cur).css("display", "inline-block");
+      $(div_cur).css("cursor", "pointer");
+
+      var div_items = document.createElement("div");
+      div_main.appendChild(div_items);
+      $(div_items).css("display", "inline-block");//一開始還不要隱藏，因為要取得max_cx，取得後再隱藏
+      $(div_items).css("position", "absolute");
+      $(div_items).css("left", "0px");
+      $(div_items).css("top", $(div_cur).css("height"));
+      var max_cx = 0;
+      var max_cy = 0;
+      for(var idx in items)
+      {
+        var item_text = items[idx];
+        var div_item = document.createElement("div");
+        div_item.innerText = item_text;
+        $(div_item).css("display", "inline-block");
+        if ( idx != 0 )
+          div_items.innerHTML += "<br/>";
+
+        $(div_item).css("z-index", "503");
+        $(div_item).css("cursor", "pointer");
+
+        div_items.appendChild(div_item);
+          
+        var cx = $(div_item).width();
+        if (max_cx < cx)
+          max_cx = cx;
+        var cy = $(div_item).height();
+        if (max_cy < cy)
+          max_cy = cy;
+      }// for each items
+
+      $(div_cur).width(max_cx+7);
+      $(div_items).width(max_cx + 7);
+      $(div_items).css("display", "none");//一開始還不要隱藏，因為要取得max_cx，取得後再隱藏
+      $(div_main).css("display", "inline-block");//一開始還不要inline-blcok，不然寬度max_cx會算錯
+      
+
+      $(div_cur).css("text-align", "center");
+      $(div_items).css("text-align", "center");
+      $(div_items).css("background-color", "white");
+      $(div_items).css("z-index", "500");
+
+      $(div_items).find("div").each(function () {
+        $(this).width(max_cx + 7);
+        $(this).click(function () {
+          $(div_cur).text($(this).text());
+          //隱藏起來
+          $(div_items).css('display', 'none');
+          //$(div_items).animate({ display: 'none' }, 300, 'easeOutBack');
+        });
+      });
+      
+      $(div_cur).click(function () {
+        // 彈出選單
+        $(div_items).css('display', 'inline-block');
+      });
+    }
+
+    var vers = ["kjv", "niv", "中文","niv"];
+    var div_abs = document.getElementById("audio_bible_switch");
+    init_dropdownlist(div_abs, vers, "kjv");
+
+
+  </script>
+</body>
+</html>

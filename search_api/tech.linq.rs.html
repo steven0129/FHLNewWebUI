@@ -1,0 +1,25 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+  <script src="../libs/jquery-1.10.2.js"></script>
+  <script src="../libs/linq.js_ver2.2.0.2/jquery.linq.min.js"></script>
+  <script src="../libs/linq.js_ver2.2.0.2/linq.min.js"></script>
+</head>
+<body>
+  <script>
+    Enumerable.Range(1, 20).Where(function (a1) { if (a1 % 3 == 0) return true; return false; }).WriteLine(function (a1) { return a1; });
+
+    Enumerable.Range(1, 20).Where('$ % 3 == 0').WriteLine('$');
+
+    // 亂數
+    Enumerable.Choice([1, 2, false, 4, 5, 6, 10, 'wx']).Take(10).WriteLine('$');
+
+    // 循環
+    Enumerable.Cycle([1, 2, false, 4, 5, 6, 10, 'wx']).Take(10).WriteLine('$');
+
+
+  </script>
+</body>
+</html>

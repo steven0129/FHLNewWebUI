@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+  <script src="../libs/jquery-1.10.2.js"></script>
+  <link href="../libs/jquery-ui.css" rel="stylesheet" />
+  <script src="../libs/jquery-ui.js"></script>
+  <script src="../search_api/fhl_api.js"></script>
+  <script src="c_preach_frame.js"></script>
+</head>
+<body>
+  <div id="re1"></div>
+  <script>
+  // 設定 callback function (scphp.set會呼叫)
+  scphp.pfn_set_after = function pfn_set_after(rediv) {
+    document.getElementById('re1').innerHTML = "";
+    document.getElementById('re1').appendChild(rediv);
+
+    //// 四個樣式可設定 (可變更...現在只是隨便設)
+    //for (var idx in scphp.divbooknames)//主題
+    //  $(scphp.divbooknames[idx]).addClass("chapSelect");
+    //for (var idx in scphp.divtitles)//範圍
+    //  $(scphp.divtitles[idx]).addClass("chapSelect");
+    //for (var idx in scphp.divnexts)//範圍
+    //  $(scphp.divnexts[idx]).addClass("search_type");
+    //for (var idx in scphp.divprevs)//範圍
+    //  $(scphp.divprevs[idx]).addClass("search_type");
+  }; // 設定 callback function (scphp.set會呼叫)
+
+  // 設定 callback function (onclick時會呼叫)
+  //scphp.pfn_goto_sec = function pfn_(engs, chap, sec) {
+  //  var idx = getBookFunc("indexByEngs", engs);
+  //  ps.chineses = book[idx];
+  //  ps.engs = engs;
+  //  ps.chap = chap;
+  //  ps.sec = sec;
+  //  bookSelect.render(pageState, bookSelect.dom);
+  //  fhlLecture.render(pageState, fhlLecture.dom);
+  //  fhlInfo.render(pageState);
+  //}; // 設定 callback function (onclick時會呼叫)
+
+  scphp.set("Gen", 1, 1);
+  </script>
+</body>
+</html>
