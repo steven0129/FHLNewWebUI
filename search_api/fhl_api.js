@@ -9,8 +9,7 @@ fhl.xml_api = function xml_api(url, fncb_success, fncb_error, obj_param, isAsync
 
   if (isAsync == undefined)//default value
     isAsync = true;
-  var root_url = "http://bkbible.fhl.net/ajax/"; // 小雪本機開發要用這個. 上線後要用下面那個 2015.10.24(六)
-  root_url = "/ajax/"; // 小雪本機開發要上面那個. 上線後要這個 2015.10.24(六)
+  var root_url = "https://bkbible.fhl.net/ajax/";
   var ab_url = root_url + url;
   ab_url = encodeURI(ab_url).replace("#","%23"); // encodeURI 不會轉換#符號, 手動轉換
   return $.ajax({
@@ -31,8 +30,7 @@ fhl.xml_api = function xml_api(url, fncb_success, fncb_error, obj_param, isAsync
 fhl.json_api = function json_api(url, fncb_success, fncb_error, obj_param, isAsync) {
   if (isAsync == undefined)//default value
     isAsync = true;
-  var root_url = "http://bkbible.fhl.net/json/"; // 小雪本機開發要用這個. 上線後要用下面那個 2015.10.24(六)
-  root_url = "/json/"; // 小雪本機開發要上面那個. 上線後要這個 2015.10.24(六)
+  var root_url = "https://bible.fhl.net/json/";
   var ab_url = root_url + url;
   ab_url = encodeURI(ab_url).replace("#","%23"); // encodeURI 不會轉換#符號, 手動轉換
   return $.ajax({
@@ -61,8 +59,7 @@ fhl.xml_api_text = function xml_api(url, fncb_success, fncb_error, obj_param, is
 
   if (isAsync == undefined)//default value
     isAsync = true;
-  var root_url = "http://bkbible.fhl.net/ajax/"; // 小雪本機開發要用這個. 上線後要用下面那個 2015.10.24(六)
-  root_url = "/ajax/"; // 小雪本機開發要上面那個. 上線後要這個 2015.10.24(六)
+  var root_url = "https://bkbible.fhl.net/ajax/";
   var ab_url = root_url + url;
   ab_url = encodeURI(ab_url).replace("#","%23"); // encodeURI 不會轉換#符號, 手動轉換
   return $.ajax({
@@ -90,8 +87,7 @@ fhl.json_api_text = function json_api_text(url, fncb_success, fncb_error, obj_pa
 
   if (isAsync == undefined)//default value
     isAsync = true;
-  var root_url = "http://bkbible.fhl.net/json/"; // 小雪本機開發要用這個. 上線後要用下面那個 2015.10.24(六)
-  root_url = "/json/"; // 小雪本機開發要上面那個. 上線後要這個 2015.10.24(六)
+  var root_url = "https://bible.fhl.net/json/";
   var ab_url = root_url + url;
   ab_url = encodeURI(ab_url).replace("#","%23"); // encodeURI 不會轉換#符號, 手動轉換
   return $.ajax({
@@ -111,7 +107,6 @@ fhl.json_api_text = function json_api_text(url, fncb_success, fncb_error, obj_pa
 fhl.json_api_text_post = function json_api_text_post(url, data, fncb_success, fncb_error, obj_param, isAsync) {
   /// <summary> 取fhl的json資料, 但是確是取得最原始資料, 原因是 json 有時候不正確, 還是回傳純文字好了 </summary>
   /// <param type="string" name="url">例如 se.php?q=.... 不用包含全部網址 </param>
-  /// <param type="string" name="data">{aaa:bbb,ccc:ddd} or get方式?後面字串方式亦可</param>
   /// <param type="Action&lt;string,T>" name="fncb_success">當API成功，要作什麼事，arg1是回傳的文字，arg2是obj_param傳入的。可傳null表示不作事</param>
   /// <param type="Action&lt;string,T>" name="fncb_error">當API失敗時，要作什麼事，arg1是回傳的文字，arg2是obj_param傳入的。可傳null表示不作事</param>
   /// <param type="Action&lt;T>" name="obj_param">傳入給fnch_success第2個參數。通常是作為存回傳值用的</param>
@@ -119,8 +114,7 @@ fhl.json_api_text_post = function json_api_text_post(url, data, fncb_success, fn
 
   if (isAsync == undefined)//default value
     isAsync = true;
-  var root_url = "http://bkbible.fhl.net/json/"; // 小雪本機開發要用這個. 上線後要用下面那個 2015.10.24(六)
-  root_url = "/json/"; // 小雪本機開發要上面那個. 上線後要這個 2015.10.24(六)
+  var root_url = "https://bible.fhl.net/json/";
   var ab_url = root_url + url;
   ab_url = encodeURI(ab_url).replace("#", "%23"); // encodeURI 不會轉換#符號, 手動轉換
   return $.ajax({
@@ -333,11 +327,11 @@ fhl.get_prev_chap = function get_prev_chap (ibook, ichap){
 }
 fhl.any_name_2_iBook = function any_name_2_iBook(name) {
   /// <summary> 不論輸入 Ex Exodus 出 出埃及記 Ex 都會回傳1 (0-based)，若不存在回傳-1 </<summary>
-  var jr1 = $.Enumerable.From(fhl.g_book_all);
+  var jr1 = Enumerable.From(fhl.g_book_all);
 
   // 會回傳 ["Ex", "Exodus", "出", "出埃及記", "Ex"]
   var jr2 = jr1.FirstOrDefault(null, function (a1) {
-    if ($.Enumerable.From(a1).Any("a2=>a2=='" + name + "'") == true)
+    if (Enumerable.From(a1).Any("a2=>a2=='" + name + "'") == true)
       return true;
     return false;
   });

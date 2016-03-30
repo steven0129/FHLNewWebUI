@@ -270,13 +270,6 @@ function fn_tcv(ibook, ichap) {
   //<source id="mp3" src="http://media.fhl.net/tcv/1/1_002.mp3" type="audio/mpeg">
   var root1 = "http://media.fhl.net/tcv/";
   var re2 = fn_read_bible_common_filename1(ibook, ichap);
-
-  // 後來又說要改回去
-  // re2.cur = tcv/45a/45_001.mp3 ... 多了一個 a 
-  //var re2a = re2.cur.split("/");
-  //var re1 = {};
-  //re1.cur = root1 + re2a[0] + "A/"+ re2a[1];
-
   var re1 = {};
   re1.cur = root1 + re2.cur;
   return re1;
