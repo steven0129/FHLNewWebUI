@@ -7,6 +7,7 @@
 //http://localhost:19833/ob_api.css
 //http://localhost:19833/ob_table.css
 
+// 典藏功能 react 
 var obphp = obphp || {};
 obphp.R = obphp.R || {
   yearitem: React.createClass({
@@ -164,15 +165,58 @@ obphp.R = obphp.R || {
       //console.debug("frame.top.render");
       //console.log(this.props);
 
-      var r1 = React.createElement(obphp.R.year, {
-        _set_year_range: this.props._set_year_range,
-        year_set: this.props.year_set //為了要畫 active 是哪個, 所以要傳下去
-      });//top.year
+      var r1 = null;
+      if (this.props.isgb == 0)
+      {
+        // 繁體.
+        r1 = React.createElement(obphp.R.year, {
+          _set_year_range: this.props._set_year_range,
+          year_set: this.props.year_set //為了要畫 active 是哪個, 所以要傳下去
+        });//top.year
+      }
+      else
+      {
+        // 簡體.
+        r1 = React.createElement(obphp.R.year, {
+          _set_year_range: this.props._set_year_range,
+          year_set: this.props.year_set, //為了要畫 active 是哪個, 所以要傳下去
+          sels: [
+  { t: "全部", y: "0-9999" },
+  { t: "19世纪早期", y: "1800-1833" },
+  { t: "19世纪中期", y: "1834-1866" },
+  { t: "19世纪晚期", y: "1867-1899" },
+  { t: "20世纪上半", y: "1900-1950" },
+  { t: "20世纪下半", y: "1951-2000" },
+          ]
+        });//top.year
+      }
 
-      var r2 = React.createElement(obphp.R.style, {
+      
+      var r2 = null;
+      if (this.props.isgb == 0)
+      {
+        r2 = React.createElement(obphp.R.style, {
         _set_style: this.props._set_style,
         style_set: this.props.style_set // 為了要畫 active 是哪個, 所以要傳下去
       });//top.style
+      }
+      else
+      {
+        r2 = React.createElement(obphp.R.style, {
+          _set_style: this.props._set_style,
+          style_set: this.props.style_set, // 為了要畫 active 是哪個, 所以要傳下去
+          sels: [
+                  { t: "全部" },
+                  { t: "白话（官话）" },
+                  { t: "深文理" },
+                  { t: "浅文理" },
+                  { t: "少数民族及各地方言" },
+                  { t: "外文" },
+                  { t: "双语" }
+          ]
+        });//top.style
+      }
+
       var rRet = React.createElement("div", {}, r1, r2);
       return rRet;
     }
@@ -189,7 +233,7 @@ obphp.R = obphp.R || {
         return React.createElement('td', {}, a1);
       });
       var rinfo = React.createElement("td", { className: "list_item_info" }, "說明");
-      var rread = React.createElement("td", { className: "list_item_read", onClick: this._onclick_read_this_book }, "閱讀");
+      var rread = React.createElement("td", { className: "list_item_read", onClick: this._onclick_read_this_book }, (this.props.isgb == 0) ? "閱讀" : "阅读");
       return React.createElement("tr", {}, rtds, rread);
       //return React.createElement("tr", {}, rtds,rinfo,rread);//含「說明」版本
     }
@@ -201,9 +245,16 @@ obphp.R = obphp.R || {
     },
     render: function () {
 
+      var titles = [];
+      if (this.props.isgb == 0)
+        titles = ["年代", "作者/譯者", "書名", "語言", "閱讀"];
+      else
+        titles = ["年代", "作者/译者", "书名", "语言", "阅读"];
+
       //var ths=  React.createElement("tr", {},["年代", "作者/譯者", "書名", "語言", "", "說明", "閱讀"].map(function (a1) {
-      var ths = React.createElement("tr", {}, ["年代", "作者/譯者", "書名", "語言", "閱讀"].map(function (a1) {
-        return React.createElement("td", {}, a1);
+      var pthis = this;
+      var ths = React.createElement("tr", { isgb: this.props.isgb }, titles.map(function (a1) {
+        return React.createElement("td", { isgb: pthis.props.isgb }, a1);
       }));
 
       // 準備table的tbody      
@@ -219,7 +270,8 @@ obphp.R = obphp.R || {
               t: a1.title,
               iid: a1.id,
               _set_content_type: pthis.props._set_content_type,
-              _set_book_id: pthis.props._set_book_id
+              _set_book_id: pthis.props._set_book_id,
+              isgb: pthis.props.isgb
             })
           });
           rtbody = React.createElement("tbody", null, ths, rs);
@@ -256,7 +308,8 @@ obphp.R = obphp.R || {
           return React.createElement(obphp.R.content_list, {
             records: this.props.records,
             _set_content_type: this.props._set_content_type,
-            _set_book_id: this.props._set_book_id
+            _set_book_id: this.props._set_book_id,
+            isgb: this.props.isgb
           });
         case "read":
           {
@@ -280,38 +333,39 @@ obphp.R = obphp.R || {
               return React.createElement("div", {});
             var re_record = this.props.records[0];
 
-            {
-              var rmenu = React.createElement("span", { className: "read_button", onClick: this._onclick_goto_menu }, "回清單");
-              var rprev = React.createElement("span", { className: "read_button", onClick: this._onclick_goto_prev_page }, "翻上一頁");
+         {
+              var rmenu = React.createElement("span", { className: "read_button", onClick: this._onclick_goto_menu }, this.props.isgb? "回清单":"回清單");
+              var rprev = React.createElement("span", { className: "read_button", onClick: this._onclick_goto_prev_page }, this.props.isgb? "翻上一页" : "翻上一頁");
               var rtitle = React.createElement("span", { className: "read_span" }, re_record.name); // 1927新舊約串珠淺文理施約瑟主教譯本
 
               var rtitle2 = null;
               if (re_record.vid != 0) // 封面的 vid = 0 
                 rtitle2 = React.createElement("span", { className: "read_span" }, fhl.g_book_all[re_record.vid - 1][3]) // 馬太福音
               else
-                rtitle2 = React.createElement("span", { className: "read_span" }, "封面") 
+                rtitle2 = React.createElement("span", { className: "read_span" }, "封面") //繁簡寫一樣
 
               var rtitle3 = React.createElement("span", { className: "read_span" }, "page:" + re_record.page);
               var rtitle4;
               {
+                // 章節至 // 章节至
                 var res = "";
                 if (re_record.vid != 0) // 封面的 vid = 0 時, chap sec 屬性都不值得參考
                 {
                   if (re_record.bchap != 0) {
                     res += re_record.bchap.toString() + "章";
                     if (re_record.bsec != 0)
-                      res += re_record.bsec.toString() + "節";
+                      res += re_record.bsec.toString() + this.props.isgb? "节": "節";
                     res += "至";
                   }
                   if (re_record.echap != 0) {
                     res += re_record.echap.toString() + "章";
                     if (re_record.esec != 0)
-                      res += re_record.esec.toString() + "節";
+                      res += re_record.esec.toString() + this.props.isgb ? "节" : "節";
                   }
                 }
                 rtitle4 = React.createElement("span", { className: "read_span" }, res);
               }
-              var rnext = React.createElement("span", { className: "read_button", onClick: this._onclick_goto_next_page }, "翻下一頁");
+              var rnext = React.createElement("span", { className: "read_button", onClick: this._onclick_goto_next_page }, this.props.isgb ? "翻下一页" : "翻下一頁");
             }//for rtop
             var rtop = React.createElement("div", {}, rmenu, rprev, rnext, rtitle, rtitle2, rtitle3, rtitle4);
 
@@ -385,7 +439,8 @@ obphp.R = obphp.R || {
         ibook: 39,
         ichap: 1,
         isec: 1,
-        isgb:false
+        isgb: false,
+        cy:640
       };
     },
     getInitialState: function () {
@@ -446,15 +501,16 @@ obphp.R = obphp.R || {
           content_type: "list",
           records: this.state.obdata,
           _set_content_type: this._set_content_type,
-          _set_book_id: this._set_book_id
+          _set_book_id: this._set_book_id,
+          isgb:this.props.isgb // 繁簡體
         });//frame.content
       else {
         r2 = React.createElement(obphp.R.content, {
           content_type: this.state.content_type,
           records: this.state.sobdata,
           _set_content_type: this._set_content_type,
-          _set_read_page: this._set_read_page
-
+          _set_read_page: this._set_read_page,
+          isgb:this.props.isgb // 繁簡體
         });//frame.content
       }
 
@@ -466,10 +522,11 @@ obphp.R = obphp.R || {
           _set_style: this._set_style,
           year_set: this.state.year_set, //為了要畫 active 是哪個, 所以要傳下去
           style_set: this.state.style_set, //為了要畫 active 是哪個, 所以要傳下去
-          _set_content_type: this._set_content_type
+          _set_content_type: this._set_content_type,
+          isgb: this.props.isgb // 為了繁簡體
         });//frame.top
 
-        return React.createElement("div", {}, r1, r2);
+        return React.createElement("div", { style: { height:this.props.cy, "overflow-y": "auto"}}, r1, r2);
       }
       else
         return React.createElement("div", {}, r2); //不用rtop
@@ -693,7 +750,7 @@ obphp.R = obphp.R || {
   })// frame class
 };// define react class
 
-obphp.r = {};
-obphp.r.frame = React.createElement(obphp.R.frame);// r:react Ob:(Old Bible) Frame
+//obphp.r = {};
+//obphp.r.frame = React.createElement(obphp.R.frame);// r:react Ob:(Old Bible) Frame
 // example: React.render(obphp.r.frame, document.getElementById("re1"));
 

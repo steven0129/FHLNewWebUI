@@ -4,7 +4,8 @@ fhlAPI.jsonAPI = function(url,cbOK,cbFail,params,async){
     if(async===null||async===undefined){
         async=true;
     }//default value
-    var root_url="https://bkbible.fhl.net/json/";
+    //var root_url="http://bkbible.fhl.net/json/";
+    var root_url="/json/";
     var ab_url=root_url+url;
     $.ajax({
         url:encodeURI(ab_url),

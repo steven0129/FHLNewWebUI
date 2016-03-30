@@ -44,24 +44,37 @@ sephp.create_dialog_search_result = function create_dialog_search_result(jrecord
   /// <param type="T[]" name="jrecords" parameterArray="true">ibook, chap, sec, ver, bible_text (通常是排序好了)</param>
   /// <param type="Node" name="node_search_result" parameterArray="true">document.getElementById('search_result')</param>
   
+  //console.log(jrecords);
+
   var div_verse_group = document.createElement("div");
     
   $.each(jrecords, function (idx, obj) {
     // bible_text
     var span_text = qsbphp.create_color_span_from_bible_text(sephp.keyword, obj["bible_text"], "sebutton", "seKey", "seSN");
-
+    
     // 這個span接著要加入所有的click訊息
     var ver = obj.ver;
     var engs = fhl.g_book_all[obj.ibook][0];
-    $(span_text).find('span.seSN').each(function (idx2, obj2) {
-      var newkeyword = obj2.innerText.substr(1, obj2.innerText.length - 2);
 
-      $(obj2).click({
-        keyword: newkeyword,
+    // replace 2015.10.29(四) 用 react 來實作. 
+    var pfn_sn_click = function (sn) {
+      // 因為原本是 onclick 訊息, 所以裡面的 pdata.data.sn 才是 sn_click 取的, 所以會多一層 .data
+      var pdata = {data:{
+        keyword: sn,
         engs: engs,
         ver: ver
-      }, sephp.sn_click);
-    });//加上each sn的click訊息
+        }};
+      sephp.sn_click(pdata);
+    };
+    // mark 2015.10.29(四)
+    //$(span_text).find('span.seSN').each(function (idx2, obj2) {
+    //  var newkeyword = obj2.innerText.substr(1, obj2.innerText.length - 2);
+    //  $(obj2).click({
+    //    keyword: newkeyword,
+    //    engs: engs,
+    //    ver: ver
+    //  }, sephp.sn_click);
+    //});//加上each sn的click訊息
 
     // 準備要加進的 div 與 span 
     var div_one = document.createElement("div");
@@ -78,7 +91,11 @@ sephp.create_dialog_search_result = function create_dialog_search_result(jrecord
     
     
     {// 經文加入
-      div_right.appendChild(span_text);
+      //var search_sn = function (sn) { console.log(sn); };
+      // replace 2015.10.29(四) 用 react 來實作. 
+      var r = React.createElement(sephp.R.txt, { pfn_search_sn: pfn_sn_click, txt: obj["bible_text"], sn: sephp.keyword.split(' ') });// r:react Ob:(Old Bible) Frame
+      React.render(r, div_right);
+      //div_right.appendChild(span_text); //mark 2015.10.29(四) 
     }// 經文加入
 
     {//經文資訊加入
