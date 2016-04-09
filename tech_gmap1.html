@@ -207,13 +207,15 @@
   <script>
     var Rgmap = React.createClass(
       {
+        set_active : function (id){},
         setdata: function (datas)
         {
           /// <summary> 得到 sobj 查詢資料, 用這個來更新資料 </summary>
           /// <param type="JSON" name="datas" parameterArray="false"> sobj 查詢的結果 </param>
 
           var pthis = this;
-          var datas2 = $.Enumerable.From(datas).Where("$.is_site == 1").Select(function (a1, i1)
+          var datas2={};
+          $.Enumerable.From(datas).Where("$.is_site == 1").ForEach(function (a1, i1)
           {
             var jo = {};
 
@@ -232,7 +234,6 @@
             {
               var paths = jo["objpath"];
               var position = paths[0];
-              console.log(position);
               if (paths.length != 1) {
                 var bound = new google.maps.LatLngBounds();
                 for (var i in paths)
@@ -240,12 +241,14 @@
                 position = bound.getCenter();
               }
 
-              jo["marker"] = new google.maps.Marker(
+              var marker = new google.maps.Marker(
                 {
                   position: position,
-                  map: pthis._map, //再用 set來打開
+                  //map: pthis._map, //再用 set來打開
                   label: a1.cname
                 });
+              jo["marker"] = marker;
+
             }
 
             // polyline
@@ -266,12 +269,13 @@
                   geodesic: true
                 });
             }
-            return jo;
-          }).ToArray();
+            
+            datas2[a1.id.toString()] = jo;
+          });
           this.setState({ datas: datas2 });
           
         },
-        getInitialState: function () { return {"datas":[]}; },
+        getInitialState: function () { return { "datas": {}}; },
         componentDidMount: function ()
         {
           var thisdom = this.getDOMNode();
@@ -285,15 +289,16 @@
           var pthis = this;
 
           // markers
-          console.log(this.state.datas);
           $.Enumerable.From(this.state.datas).ForEach(function (a1)
           {
-            if (a1.marker != null)
-              a1.marker.setMap(pthis._map);
-            if (a1.polyline != null)
-              a1.polyline.setMap(pthis._map);
-            if (a1.polygon != null)
-              a1.polygon.setMap(pthis._map);
+            var jo = a1.Value;
+            if (jo.marker != null)
+              jo.marker.setMap(pthis._map);
+            if (jo.polyline != null)
+              jo.polyline.setMap(pthis._map);
+            if (jo.polygon != null)
+              jo.polygon.setMap(pthis._map);
+            
           });
 
           return React.createElement("div", { "style": {"width":"100%","height":"100%"}}, "gmap");
