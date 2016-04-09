@@ -207,10 +207,19 @@
   <script>
     var Rgmap = React.createClass(
       {
-        set_active : function (id){},
-        setdata: function (datas)
+        set_active: function (id)
         {
-          /// <summary> 得到 sobj 查詢資料, 用這個來更新資料 </summary>
+          /// <summary> 這個通常是地圖內部 click marker 呼叫, 但也可以外部呼叫, 因為將來還要作, active 會與所有的算距離, 所以active 只允許同時間1個. </summary>
+          /// <param type="Int" name="id" parameterArray="false"> 這個地圖物件的id </param>
+
+          if ( this.state.id_active != id.toString() )
+            this.setState({ "id_active": id.toString() });
+          else if (this.state.id_active == id.toString())
+            this.setState({ "id_active": "-1" }); //若一樣(再點一次),則取消active
+        },
+        set_data: function (datas)
+        {
+          /// <summary> 得到 sobj 查詢資料, 用這個來更新資料, 通常是外部呼叫 </summary>
           /// <param type="JSON" name="datas" parameterArray="false"> sobj 查詢的結果 </param>
 
           var pthis = this;
@@ -249,6 +258,7 @@
                 });
               jo["marker"] = marker;
 
+              marker.addListener("click", pthis.set_active.bind(pthis,a1.id));
             }
 
             // polyline
@@ -275,7 +285,7 @@
           this.setState({ datas: datas2 });
           
         },
-        getInitialState: function () { return { "datas": {}}; },
+        getInitialState: function () { return { "datas": {}, "id_active":"-1"}; },
         componentDidMount: function ()
         {
           var thisdom = this.getDOMNode();
@@ -297,9 +307,27 @@
             if (jo.polyline != null)
               jo.polyline.setMap(pthis._map);
             if (jo.polygon != null)
+            {
               jo.polygon.setMap(pthis._map);
-            
+              jo.polygon.setOptions({
+                strokeWeight: 0.5,
+                strokeColor: "#000000"
+              }); //先所有還原成黑色,下面再把active設為藍色
+            }
           });
+
+          // id_active
+          if (this.state.datas[this.state.id_active] != null)
+          {
+            var jo = this.state.datas[this.state.id_active];
+            if ( jo.polygon!=null ) 
+            {
+              jo.polygon.setOptions({
+                strokeWeight: 2,
+                strokeColor: "#0000FF"
+              }); //先所有還原成黑色,下面再把active設為藍色
+            }
+          }
 
           return React.createElement("div", { "style": {"width":"100%","height":"100%"}}, "gmap");
         }
@@ -307,7 +335,7 @@
 
     // rendere
     var rgmap = React.render(React.createElement(Rgmap, {}), document.getElementById("re1"));
-    rgmap.setdata(testdata1.result.record);
+    rgmap.set_data(testdata1.result.record);
 
   </script>
   
