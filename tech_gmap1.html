@@ -302,8 +302,10 @@
           $.Enumerable.From(this.state.datas).ForEach(function (a1)
           {
             var jo = a1.Value;
-            if (jo.marker != null)
+            if (jo.marker != null){
               jo.marker.setMap(pthis._map);
+              jo.marker.setOptions({ "optimized": false, "zIndex": parseInt( a1.Key) });
+            }
             if (jo.polyline != null)
               jo.polyline.setMap(pthis._map);
             if (jo.polygon != null)
@@ -320,6 +322,10 @@
           if (this.state.datas[this.state.id_active] != null)
           {
             var jo = this.state.datas[this.state.id_active];
+            if (jo.marker != null)
+            {
+              jo.marker.setOptions({ "optimized": false, "zIndex":99999 });
+            }
             if ( jo.polygon!=null ) 
             {
               jo.polygon.setOptions({
