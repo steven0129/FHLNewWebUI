@@ -212,10 +212,77 @@
           /// <summary> 這個通常是地圖內部 click marker 呼叫, 但也可以外部呼叫, 因為將來還要作, active 會與所有的算距離, 所以active 只允許同時間1個. </summary>
           /// <param type="Int" name="id" parameterArray="false"> 這個地圖物件的id </param>
 
+          var pthis = this;
+          var btwdatas = this.state.btwdatas;
+          var datas = this.state.datas;
+          var btw_active = []; //目 active 有關的 btwkey ["1_254", "1_521"]
+          if (id != "-1")
+          {
+            var lqdatas = $.Enumerable.From(datas);
+            lqdatas.ForEach(function (a1, i1) {
+              var active_marker = datas[id.toString()]["marker"];
+              if (a1.Key != id.toString()) {
+                var btwkey = (id < parseInt(a1.Key)) ? id.toString() + "_" + a1.Key : a1.Key + "_" + id.toString();
+                btw_active.push(btwkey);
+
+                if (btwdatas[btwkey] == null) {
+                  var btwobj = {};
+                  btwdatas[btwkey] = btwobj;
+
+                  var path = [];
+                  path.push(active_marker.getPosition());
+                  path.push(datas[a1.Key]["marker"].getPosition());
+
+                  var polyline = new google.maps.Polyline({
+                    path: path,
+                    geodesic: true,
+                    strokeOpacity: 0.8,
+                    //editable: true,
+                    strokeWeight: 1
+                    //map: pthis._map
+                    });
+                  btwobj["polyline"] = polyline;
+
+                  var isdown = false;
+                  var tmr = null;//timer , 若mouse up啟動後, 在 down 的時候, 就再把它cancel掉
+                  polyline.addListener('mouseover', function (a1) {
+                    polyline.setOptions({ 'editable': true });
+                  });
+                  polyline.addListener('mouseout', function (a1) {
+                    if (isdown==false)
+                    polyline.setOptions({ 'editable': false });
+                  });
+                  polyline.addListener('mousedown', function (a1) {
+                    isdown = true;
+                    if (tmr != null)
+                      clearTimeout(tmr);
+                  });
+                  polyline.addListener('mouseup', function (a1) {
+                    tmr = setTimeout(function () {
+                        isdown = false ;
+                        iscanceltimer = false;
+                        polyline.setOptions({ 'editable': false });
+                    }, 2000);
+                  });
+                }
+              }
+            });
+          }
+
           if ( this.state.id_active != id.toString() )
-            this.setState({ "id_active": id.toString() });
+            this.setState(
+              {
+                "id_active": id.toString(),
+                "btwdatas": btwdatas,
+                "btw_active":btw_active
+              });
           else if (this.state.id_active == id.toString())
-            this.setState({ "id_active": "-1" }); //若一樣(再點一次),則取消active
+            this.setState(
+              {
+                "id_active": "-1",
+                "btwdatas": btwdatas,
+                "btw_active": btw_active
+              });//若一樣(再點一次),則取消active
         },
         set_data: function (datas)
         {
@@ -285,7 +352,14 @@
           this.setState({ datas: datas2 });
           
         },
-        getInitialState: function () { return { "datas": {}, "id_active":"-1"}; },
+        getInitialState: function () {
+          return {
+            "datas": {},
+            "id_active": "-1",
+            "btwdatas": {},
+            "btw_active":[]
+          };
+        },
         componentDidMount: function ()
         {
           var thisdom = this.getDOMNode();
@@ -318,14 +392,25 @@
             }
           });
 
+          // btws
+          $.Enumerable.From(this.state.btwdatas).ForEach(function (a1) {
+            var jo = a1.Value;
+            if (jo.polyline != null){
+              jo.polyline.setMap(null);
+            }
+          });
+
           // id_active
           if (this.state.datas[this.state.id_active] != null)
           {
+            // marker 變 zIndex
             var jo = this.state.datas[this.state.id_active];
             if (jo.marker != null)
             {
               jo.marker.setOptions({ "optimized": false, "zIndex":99999 });
             }
+
+            // polygon 變 色框
             if ( jo.polygon!=null ) 
             {
               jo.polygon.setOptions({
@@ -333,6 +418,17 @@
                 strokeColor: "#0000FF"
               }); //先所有還原成黑色,下面再把active設為藍色
             }
+
+            // 距離 polyline show
+            var btwacts = this.state.btw_active;
+            $.Enumerable.From(btwacts).ForEach(function (a1, i1)
+            {
+              var jbtw = pthis.state.btwdatas[a1];
+              if (jbtw == null)
+                return;
+              jbtw["polyline"].setMap(pthis._map);
+            });
+
           }
 
           return React.createElement("div", { "style": {"width":"100%","height":"100%"}}, "gmap");
