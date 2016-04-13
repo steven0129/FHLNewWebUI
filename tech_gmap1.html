@@ -236,7 +236,8 @@
                   var polyline = new google.maps.Polyline({
                     path: path,
                     geodesic: true,
-                    strokeOpacity: 0.8,
+                    strokeOpacity: 0.4,
+                    strokeColor: "#FF00FF",
                     //editable: true,
                     strokeWeight: 1
                     //map: pthis._map
@@ -262,7 +263,20 @@
                         isdown = false ;
                         iscanceltimer = false;
                         polyline.setOptions({ 'editable': false });
-                    }, 2000);
+                    }, 5000);
+                  });
+                  polyline.addListener('rightclick', function (a1) {
+                    if (a1.vertex == null)
+                      return;//右鍵不是按在控制點上
+
+                    if ( a1.vertex == 0 )
+                      return ;// 不移除端點
+
+                    var path = polyline.getPath();
+                    if (path.getLength() - 1 == a1.vertex)
+                      return;//不移除端點
+
+                    path.removeAt(a1.vertex);
                   });
                 }
               }
