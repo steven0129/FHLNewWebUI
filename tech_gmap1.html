@@ -207,6 +207,21 @@
   <script>
     var Rgmap = React.createClass(
       {
+        _on_btw_polyline_over: [],
+        _trigger_btw_polyline_over: function (param) {
+          /// <summary> 可供外部使用, 例如用一行文字顯示它們的兩端是哪兩個 </summary>
+          /// <param type="{}" name="id" parameterArray="false"> {btwkey:"34_512"} </param>
+          var ids = param.btwkey.split('_');
+          var data1 = this.state.datas[ids[0]];
+          var data2 = this.state.datas[ids[1]];
+          var btwdata = this.state.btwdatas[param.btwkey];
+          
+          console.log(data1.cname + " 至 " + data2.cname);
+
+          var bb =btwdata.polyline.getPath();
+          var aa = google.maps.geometry.spherical.computeLength(bb);
+          console.log(aa);
+        },
         set_active: function (id)
         {
           /// <summary> 這個通常是地圖內部 click marker 呼叫, 但也可以外部呼叫, 因為將來還要作, active 會與所有的算距離, 所以active 只允許同時間1個. </summary>
@@ -236,17 +251,20 @@
                   var polyline = new google.maps.Polyline({
                     path: path,
                     geodesic: true,
-                    strokeOpacity: 0.4,
-                    strokeColor: "#FF00FF",
+                    strokeOpacity: 0.6,
+                    strokeColor: "#007700",
                     //editable: true,
-                    strokeWeight: 1
+                    strokeWeight: 2
                     //map: pthis._map
                     });
                   btwobj["polyline"] = polyline;
-
+                  
                   var isdown = false;
                   var tmr = null;//timer , 若mouse up啟動後, 在 down 的時候, 就再把它cancel掉
                   polyline.addListener('mouseover', function (a1) {
+
+                    pthis._trigger_btw_polyline_over({ btwkey: btwkey });
+
                     polyline.setOptions({ 'editable': true });
                   });
                   polyline.addListener('mouseout', function (a1) {
@@ -262,6 +280,7 @@
                     tmr = setTimeout(function () {
                         isdown = false ;
                         iscanceltimer = false;
+                        pthis._trigger_btw_polyline_over({ btwkey: btwkey });
                         polyline.setOptions({ 'editable': false });
                     }, 5000);
                   });
@@ -339,7 +358,19 @@
                 });
               jo["marker"] = marker;
 
-              marker.addListener("click", pthis.set_active.bind(pthis,a1.id));
+              marker.addListener("click", pthis.set_active.bind(pthis, a1.id));
+
+              // infowindow
+              marker.addListener('click', function () {
+                var infowindow = new google.maps.InfoWindow({
+                  content: a1.cname
+                });
+                infowindow.open(pthis._map, marker);
+                
+                setTimeout(function () {
+                  infowindow.close();
+                },1200);
+              });
             }
 
             // polyline
@@ -361,6 +392,14 @@
                 });
             }
             
+            // infowindows 需要的 data
+            if (a1.cname != null)
+              jo.cname = a1.cname;
+            if (a1.ename != null)
+              jo.ename = a1.ename;
+            if (a1.mname != null)
+              jo.mname = a1.mname;
+
             datas2[a1.id.toString()] = jo;
           });
           this.setState({ datas: datas2 });
