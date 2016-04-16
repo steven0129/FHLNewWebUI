@@ -213,7 +213,23 @@
     var fhlmap = fhlmap || {};
     fhlmap.R = fhlmap.R || {
       gmap: React.createClass({
-        set_ishold_data: function(ishold ){
+        auto_zoom: function () {
+          /// <summary> 設計由外部按鈕呼叫 </summary>
+          var isempty = true;
+          var bound = new google.maps.LatLngBounds();
+          var pthis = this;
+          $.Enumerable.From(this.state.datas).ForEach(function (a1, i1) {
+            var jo = a1.Value;
+            var marker = jo["marker"];
+            if (marker != null) {
+              isempty = false;
+              bound.extend(marker.getPosition());
+            }
+          });
+          if (isempty==false)
+            this._map.fitBounds(bound);
+        },
+        set_ishold_data: function (ishold) {
           this._ishold = ishold;
         },
         _ishold: false,
@@ -596,8 +612,13 @@
         },
         _ishold: false,
         render: function () {
-          var chk_ishold = React.createElement("input", { "type": "checkbox" ,"onChange": this._trigger_ishold_changed.bind(this,{}) , ref:"chk_ishold"}, "切換章不刪除");
-          return React.createElement("div", {}, chk_ishold);
+          var pthis = this;
+          
+          var chk_ishold = React.createElement("input", { "type": "checkbox", "onChange": this._trigger_ishold_changed.bind(this, {}), ref: "chk_ishold" }, "切換章不刪除");
+          var btn_auto_zoom = React.createElement("input", {
+            "type": "button", "onClick": this.props.auto_zoom, "value": "AutoZoom"
+          });
+          return React.createElement("div", {}, chk_ishold, btn_auto_zoom);
         }
       }),
       frame: React.createClass({
@@ -606,7 +627,9 @@
           /// <param type="JSON" name="datas" parameterArray="false"> sobj 查詢的結果 </param>
           this.refs.gmap.set_data(datas);
         },
-
+        auto_zoom: function () {
+          this.refs.gmap.auto_zoom();
+        },
         getDefaultProps: function () { return {}; },
         getInitialState: function () { return {}; },
         componentWillMount: function () { },
@@ -626,7 +649,7 @@
         componentWillUnmount: function () { },//通常在DidMount建的 DOM 在這裡要移除. timer 也是
         render: function () {
           var rtop = React.createElement(fhlmap.R.top, { ref: "top" });
-          var rtools = React.createElement(fhlmap.R.tools, { ref: "tools" });
+          var rtools = React.createElement(fhlmap.R.tools, { ref: "tools", "auto_zoom": this.auto_zoom });
           var rgmap = React.createElement(fhlmap.R.gmap, {ref:"gmap"});
 
           return React.createElement("div", { "style": { "width": "100%", "height": "90%" } }, rtop, rtools, rgmap);
