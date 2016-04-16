@@ -205,12 +205,15 @@
   <div id="re1" style="width:480px;height:640px;background-color:whitesmoke"></div>
   
   <script>
-    function aaa(param2) {
-      console.log(param2);
-    }
-    var Rgmap = React.createClass(
-      {
-        _on_btw_polyline_over: [],/// <summary> 將函式指標丟進來, 依次呼叫. 會傳 .na1 .na2 .dist </summary>
+    // template
+    var fhlmap = fhlmap || {};
+    fhlmap.R = fhlmap.R || {
+      gmap: React.createClass({
+        bind_on_btw_polyline_over: function (pfn) {
+          /// <summary> 將函式指標丟進來, 依次呼叫. 會傳 .na1 .na2 .dist </summary>
+          this._on_btw_polyline_over.push(pfn);
+        },
+        _on_btw_polyline_over: [],/// <summary> 使用 bind_on_btw_polyline_over </summary>
         _trigger_btw_polyline_over: function (param) {
           /// <summary> 可供外部使用, 例如用一行文字顯示它們的兩端是哪兩個 </summary>
           /// <param type="{}" name="id" parameterArray="false"> {btwkey:"34_512"} </param>
@@ -271,7 +274,7 @@
                     //editable: true,
                     strokeWeight: 2
                     //map: pthis._map
-                    });
+                  });
                   btwobj["polyline"] = polyline;
                   
                   var isdown = false;
@@ -284,7 +287,7 @@
                   });
                   polyline.addListener('mouseout', function (a1) {
                     if (isdown==false)
-                    polyline.setOptions({ 'editable': false });
+                      polyline.setOptions({ 'editable': false });
                   });
                   polyline.addListener('mousedown', function (a1) {
                     isdown = true;
@@ -293,10 +296,10 @@
                   });
                   polyline.addListener('mouseup', function (a1) {
                     tmr = setTimeout(function () {
-                        isdown = false ;
-                        iscanceltimer = false;
-                        pthis._trigger_btw_polyline_over({ btwkey: btwkey });
-                        polyline.setOptions({ 'editable': false });
+                      isdown = false ;
+                      iscanceltimer = false;
+                      pthis._trigger_btw_polyline_over({ btwkey: btwkey });
+                      polyline.setOptions({ 'editable': false });
                     }, 5000);
                   });
                   polyline.addListener('rightclick', function (a1) {
@@ -336,7 +339,6 @@
         {
           /// <summary> 得到 sobj 查詢資料, 用這個來更新資料, 通常是外部呼叫 </summary>
           /// <param type="JSON" name="datas" parameterArray="false"> sobj 查詢的結果 </param>
-
           var pthis = this;
           var datas2={};
           $.Enumerable.From(datas).Where("$.is_site == 1").ForEach(function (a1, i1)
@@ -501,13 +503,49 @@
 
           return React.createElement("div", { "style": {"width":"100%","height":"100%"}}, "gmap");
         }
-      });
+      }),
+      top: React.createClass({
+        set_text: function (txt){
+          this.setState({"info":txt});
+        },
+        getInitialState: function () { return {"info":"請點擊marker"}; },
+        render: function () {
+          return React.createElement("div", { }, this.state.info);
+        }
+      }),
+      frame: React.createClass({
+        set_data: function (datas){
+          /// <summary> 得到 sobj 查詢資料, 用這個來更新資料, 通常是外部呼叫. 會呼叫 gmap </summary>
+          /// <param type="JSON" name="datas" parameterArray="false"> sobj 查詢的結果 </param>
+          this.refs.gmap.set_data(datas);
+        },
 
-    // rendere
-    var rgmap = React.render(React.createElement(Rgmap, {}), document.getElementById("re1"));
-    rgmap.set_data(testdata1.result.record);
+        getDefaultProps: function () { return {}; },
+        getInitialState: function () { return {}; },
+        componentWillMount: function () { },
+        componentDidMount: function () {
+          var pthis = this;
+          this.refs.gmap.bind_on_btw_polyline_over(function (param) {
+            var txt = param.na1 + " ~ " + param.na2 + " 距離 " + param.dist / 1000 + " km";
+            pthis.refs.top.set_text(txt);
+          });
+        },
+        componentWillReceiveProps: function (nextProp) { },
+        componentWillUpdate: function (nextProp, nextState) { },
+        componentDidUpdate: function (preProp, preState) { }, // 可於此呼叫 this.componentWillUnmount(); this.componentDidMount();
+        componentWillUnmount: function () { },//通常在DidMount建的 DOM 在這裡要移除. timer 也是
+        render: function () {
+          var rtop = React.createElement(fhlmap.R.top, {ref:"top"});
+          var rgmap = React.createElement(fhlmap.R.gmap, {ref:"gmap"});
+          
+          return React.createElement("div", { "style": { "width": "100%", "height": "90%" } }, rtop, rgmap);
+        }
+      })
+    };
 
-    rgmap._on_btw_polyline_over.push(aaa);
+    // render
+    var rfhlmap = React.render(React.createElement(fhlmap.R.frame, {}), document.getElementById("re1"));
+    rfhlmap.set_data(testdata1.result.record);
   </script>
   
 </body>
