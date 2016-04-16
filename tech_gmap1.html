@@ -205,9 +205,12 @@
   <div id="re1" style="width:480px;height:640px;background-color:whitesmoke"></div>
   
   <script>
+    function aaa(param2) {
+      console.log(param2);
+    }
     var Rgmap = React.createClass(
       {
-        _on_btw_polyline_over: [],
+        _on_btw_polyline_over: [],/// <summary> 將函式指標丟進來, 依次呼叫. 會傳 .na1 .na2 .dist </summary>
         _trigger_btw_polyline_over: function (param) {
           /// <summary> 可供外部使用, 例如用一行文字顯示它們的兩端是哪兩個 </summary>
           /// <param type="{}" name="id" parameterArray="false"> {btwkey:"34_512"} </param>
@@ -216,11 +219,23 @@
           var data2 = this.state.datas[ids[1]];
           var btwdata = this.state.btwdatas[param.btwkey];
           
-          console.log(data1.cname + " 至 " + data2.cname);
-
-          var bb =btwdata.polyline.getPath();
+          var bb = btwdata.polyline.getPath();
           var aa = google.maps.geometry.spherical.computeLength(bb);
-          console.log(aa);
+          var param2 = {
+            "na1": data1.cname,
+            "na2": data2.cname,
+            "dist": aa
+          };
+          if (this._on_btw_polyline_over.length == 0)
+          {
+            console.log(param2);
+          }
+          else
+          {
+            for (var idx in this._on_btw_polyline_over)
+              this._on_btw_polyline_over[idx](param2);
+          }
+          
         },
         set_active: function (id)
         {
@@ -492,6 +507,7 @@
     var rgmap = React.render(React.createElement(Rgmap, {}), document.getElementById("re1"));
     rgmap.set_data(testdata1.result.record);
 
+    rgmap._on_btw_polyline_over.push(aaa);
   </script>
   
 </body>
