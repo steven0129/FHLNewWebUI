@@ -420,7 +420,12 @@
             {
               var paths = jo["objpath"];
               var position = paths[0];
-              if (paths.length != 1) {
+              if (a1.otype == 1)//polyline, 在線中點(20就取第10點)
+              {
+                position = paths[paths.length / 2];
+              }
+              else if (a1.otype == 2)//polygon , 在中間
+              {
                 var bound = new google.maps.LatLngBounds();
                 for (var i in paths)
                   bound.extend(paths[i]);
