@@ -11,6 +11,7 @@
   <script src="libs/linq.js_ver2.2.0.2/jquery.linq-vsdoc.js"></script>
   <script src="libs/linq.js_ver2.2.0.2/jquery.linq.min.js"></script>
   <script src="https://maps.googleapis.com/maps/api/js?signed_in=true"></script>
+  <script src="search_api/fhl_api.js"></script>
 </head>
 <body>
   <script>
@@ -201,6 +202,9 @@
     };
   </script>
 
+  <!-- 測試章節切換 -->
+  <div id="re2" style="width:480px;background-color:white"></div>
+
   <!-- 測試的格子 -->
   <div id="re1" style="width:480px;height:640px;background-color:whitesmoke"></div>
   
@@ -225,7 +229,7 @@
           var data1 = this.state.datas[ids[0]];
           var data2 = this.state.datas[ids[1]];
           var btwdata = this.state.btwdatas[param.btwkey];
-          
+
           var bb = btwdata.polyline.getPath();
           var aa = google.maps.geometry.spherical.computeLength(bb);
           var param2 = {
@@ -242,7 +246,7 @@
             for (var idx in this._on_btw_polyline_over)
               this._on_btw_polyline_over[idx](param2);
           }
-          
+
         },
         set_active: function (id)
         {
@@ -273,14 +277,14 @@
                   var polyline = new google.maps.Polyline({
                     path: path,
                     geodesic: true,
-                    strokeOpacity: 0.6,
+                    strokeOpacity: 0.4,
                     strokeColor: "#007700",
                     //editable: true,
-                    strokeWeight: 2
+                    strokeWeight: 7
                     //map: pthis._map
                   });
                   btwobj["polyline"] = polyline;
-                  
+
                   var isdown = false;
                   var tmr = null;//timer , 若mouse up啟動後, 在 down 的時候, 就再把它cancel掉
                   polyline.addListener('mouseover', function (a1) {
@@ -356,9 +360,9 @@
               pdata.polygon = null;
             }
           }
-          this.state.datas = {};
+
           // btws 物件
-          for (var j in this.state.btwdatas) {
+          for (var i in this.state.btwdatas) {
             var pdata = this.state.btwdatas[i];
             if (pdata.marker != null) {
               pdata.marker.setMap(null);
@@ -373,9 +377,12 @@
               pdata.polygon = null;
             }
           }
-          this.state.btwdatas = {};
-          this.state.id_active = "-1";
-          this.state.btw_active = "-1_-1";
+          this.setState({
+            datas: {},
+            btwdatas: {},
+            id_active: "-1",
+            btw_active: "-1_-1"
+          });
         },
         set_data: function (datas)
         {
@@ -398,7 +405,7 @@
 
             var jo = {};
 
-            // objpaths 
+            // objpaths
             {
               var objpath = [];
               jo["objpath"] = objpath;
@@ -437,7 +444,7 @@
                   content: txt
                 });
                 infowindow.open(pthis._map, marker);
-                
+
                 setTimeout(function () {
                   infowindow.close();
                 },1200);
@@ -462,7 +469,7 @@
                   geodesic: true
                 });
             }
-            
+
             // infowindows 需要的 data
             if (a1.cname != null)
               jo.cname = a1.cname;
@@ -473,7 +480,7 @@
 
             datas2[a1.id.toString()] = jo;
           });
-          
+
           if (isChanged) //提高效率
             this.setState({ datas: datas2 });
         },
@@ -536,7 +543,7 @@
             }
 
             // polygon 變 色框
-            if ( jo.polygon!=null ) 
+            if ( jo.polygon!=null )
             {
               jo.polygon.setOptions({
                 strokeWeight: 2,
@@ -616,7 +623,7 @@
           var rtop = React.createElement(fhlmap.R.top, { ref: "top" });
           var rtools = React.createElement(fhlmap.R.tools, { ref: "tools" });
           var rgmap = React.createElement(fhlmap.R.gmap, {ref:"gmap"});
-          
+
           return React.createElement("div", { "style": { "width": "100%", "height": "90%" } }, rtop, rtools, rgmap);
         }
       })
@@ -625,7 +632,57 @@
     // render
     var rfhlmap = React.render(React.createElement(fhlmap.R.frame, {}), document.getElementById("re1"));
     rfhlmap.set_data(testdata1.result.record);
-    rfhlmap.set_data(testdata2.result.record);
+
+    var Rbookselected = React.createClass({
+      bind_on_switch: function (pfn) {
+        /// <summary> pfn(engs,chap) </summary>
+        this._on_switch.push(pfn);
+      },
+      _on_switch: [],
+      _trigger_on_switch: function (param) {
+        var pthis = this;
+        for(var i in this._on_switch)
+        {
+          this._on_switch[i]({ "engs": fhl.g_book_all[param.id][0], "chap": param.chap });
+        }
+      },
+      _switch_book: function (param) {
+        this._trigger_on_switch({ id: param.id, chap: 1 });
+      },
+      render: function () {
+        var pthis = this;
+        var lqbookall = $.Enumerable.From( fhl.g_book_all );
+        
+        var rbooks = [];
+        lqbookall.ForEach(function (a1, i1) {
+          var rbook = React.createElement("span", { style: { "margin-right": "4px","cursor":"pointer" }, "onClick":pthis._switch_book.bind(pthis,{id:i1,chinese:a1[2]})}, a1[2]);
+          rbooks.push(rbook);
+        });
+
+        return React.createElement("div", {  },rbooks);
+      }
+    });
+    var rSelect = React.render(React.createElement(Rbookselected, {}), document.getElementById("re2"));
+    var chapLast = -1;
+    var bookLast = "";
+    rSelect.bind_on_switch(function (param) {
+      if (bookLast != param.engs || chapLast != param.chap)
+      {
+        fhl.json_api_text_post("sobj.php?engs="+param.engs+"&chap="+param.chap+"", null, function (jstr) {
+          //fhl.xml_api_text("sobj?engs=Matt&chap=1", null, function (jstr) {
+          var jr1 = JSON.parse(jstr);
+          rfhlmap.set_data(jr1.record);
+        }, function (er) { });
+        bookLast = param.engs;
+        chapLast = param.chap;
+      }
+      //fhl.json_api_text_post.
+      
+    });
+
+
+
+
   </script>
   
 </body>
