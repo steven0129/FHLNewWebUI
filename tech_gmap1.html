@@ -647,8 +647,18 @@
         }
       },
       _switch_book: function (param) {
-        this._trigger_on_switch({ id: param.id, chap: 1 });
+        this.setState({
+          "isvisiblechap": true,
+          "bookid":param.id
+        });
       },
+      _switch_chap: function (param) {
+        this.setState({
+          "isvisiblechap": false,
+        });
+        this._trigger_on_switch({ id: this.state.bookid, chap: param.chap });
+      },
+      getInitialState: function () { return {"isvisiblechap":false}; },
       render: function () {
         var pthis = this;
         var lqbookall = $.Enumerable.From( fhl.g_book_all );
@@ -659,7 +669,17 @@
           rbooks.push(rbook);
         });
 
-        return React.createElement("div", {  },rbooks);
+        var rchaps = [];
+        if (this.state.isvisiblechap == true)
+        {
+          var cnt = fhl.get_chap_count(this.state.bookid);
+          $.Enumerable.Range(0, cnt).ForEach(function (a1, i1) {
+            var rchap = React.createElement("span", { style: { "margin-right": "4px", "cursor": "pointer" }, "onClick": pthis._switch_chap.bind(pthis, { chap: i1+1 } ) }, (i1+1).toString());
+            rchaps.push(rchap);
+          });
+        }
+
+        return React.createElement("div", {}, rbooks, React.createElement("br"),rchaps);
       }
     });
     var rSelect = React.render(React.createElement(Rbookselected, {}), document.getElementById("re2"));
