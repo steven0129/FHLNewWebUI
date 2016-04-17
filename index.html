@@ -40,11 +40,8 @@
     <script src="https://fb.me/JSXTransformer-0.13.3.js"></script>-->
   <script src="https://maps.googleapis.com/maps/api/js?signed_in=true"></script>
   <script src="fhlmap_api/fhlmap.js"></script>
+  <script src="fhlmap_api/fhlmap_main.js"></script>
 <script>
-  var rfhlmap = null;
-  var rfhlmap_engs_prev = "";//防止同一章一直載入
-  var rfhlmap_chap_prev = -1;//防止同一章一直載入
-  var rfhlmap_titleId_prev = "";//當切換成地圖以外功能,又切換回來的時候.要切換章才會顯示
 var pageState;
 var currentSWVer="1.0";
 var isfirstob; // ob 典藏用
@@ -2526,26 +2523,11 @@ var fhlInfoContent={
         break;
       case "fhlInfoMap":
         // 地圖 map
-        {
-          var dom2 = document.getElementById("fhlInfoContent");
-          if (dom2 != null && rfhlmap == null || rfhlmap_titleId_prev != "fhlInfoMap") {
-            console.log("recreate");
-            rfhlmap = React.render( React.createElement( fhlmap.R.frame) , dom2);
-            rfhlmap_chap_prev = -1;// 為了trigger 下面的 set 函式, 當「rfhlmap_titleId_prev != "fhlInfoMap"」時必須用到, 因為它重新create了
-          }
-          if (rfhlmap_chap_prev != ps.chap || rfhlmap_engs_prev != ps.engs ) {
-            fhl.json_api_text_post("sobj.php?engs=" + ps.engs + "&chap=" + ps.chap + "", null, function (jstr) {
-              var jr1 = JSON.parse(jstr);
-              rfhlmap.set_data(jr1.record);
-            }, function (er) { });
-            rfhlmap_engs_prev = ps.engs;
-            rfhlmap_chap_prev = ps.chap;
-          }
-        }
+        fhlmap_render(ps, dom);
         // dom.html("<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); '>施工中...</div>");
         break;
     }
-    rfhlmap_titleId_prev = ps.titleId;
+    rfhlmap_titleId_prev = ps.titleId; //地圖 map 會用到, 因為切換走分頁, 再切換回來要 re-create render object. see also: fhlmap_render
   }
 };
 
