@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     
@@ -38,8 +38,10 @@
     <!--<script src="https://fb.me/react-0.13.3.min.js"></script>
     <script src="https://fb.me/react-with-addons-0.13.3.min.js"></script>
     <script src="https://fb.me/JSXTransformer-0.13.3.js"></script>-->
+  <script src="https://maps.googleapis.com/maps/api/js?signed_in=true"></script>
+  <script src="fhlmap_api/fhlmap.js"></script>
 <script>
-
+var rfhlmap = null;
 var pageState;
 var currentSWVer="1.0";
 var isfirstob; // ob 典藏用
@@ -1163,7 +1165,7 @@ var versionSelect={
           url:ajaxUrl
         }).done(function(d,s,j){
           if(j){
-              console.log(j.responseText);
+              //console.log(j.responseText);
             var jsonObj=JSON.parse(j.responseText);
             that.data=jsonObj;
           }
@@ -1904,7 +1906,8 @@ var fhlInfoTitle={
               {"name":"講道","id":"fhlInfoPreach"},
               {"name":"串珠","id":"fhlInfoTsk"},
               {"name":"典藏","id":"fhlInfoOb"},
-              {"name":"有聲","id":"fhlInfoAudio"}
+              {"name":"有聲","id":"fhlInfoAudio"},
+              {"name":"地圖","id":"fhlInfoMap"}
       ];
     this.render(ps,this.dom);
   },
@@ -2517,7 +2520,27 @@ var fhlInfoContent={
           audiobible.g_audiobible.set_book_chap(idx, ps.chap - 1, dom[0]);
           audiobible.g_audiobible.m_pfn_after_set = pfn_callback;
         }
-        break;                                        
+        break;
+      case "fhlInfoMap":
+        // 地圖 map
+        {
+          var dom2 = document.getElementById("fhlInfoMap");
+          if (dom2 != null && rfhlmap == null) {
+            rfhlmap = React.render( React.createElement( fhlmap.R.frame) , dom2);
+            //console.log(ps);
+            //if (bookLast != param.engs || chapLast != param.chap) {
+            //  fhl.json_api_text_post("sobj.php?engs=" + param.engs + "&chap=" + param.chap + "", null, function (jstr) {
+            //    //fhl.xml_api_text("sobj?engs=Matt&chap=1", null, function (jstr) {
+            //    var jr1 = JSON.parse(jstr);
+            //    rfhlmap.set_data(jr1.record);
+            //  }, function (er) { });
+            //  bookLast = param.engs;
+            //  chapLast = param.chap;
+            //}
+          }
+        }
+        // dom.html("<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); '>施工中...</div>");
+        break;
     }
   }
 };
