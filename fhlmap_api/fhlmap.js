@@ -262,6 +262,7 @@ fhlmap.R = fhlmap.R || {
             });
           jo["marker"] = marker;
 
+          // 成為 active 
           marker.addListener("click", pthis.set_active.bind(pthis, a1.id));
 
           // infowindow
@@ -278,18 +279,9 @@ fhlmap.R = fhlmap.R || {
           });
         }
 
-        // polyline
+        // polyline (創世記第2章)
         if (a1.otype == 1) {
           jo["polyline"] = new google.maps.Polyline(
-            {
-              path: jo["objpath"],
-              //map: pthis._map, //再用 set來打開
-              geodesic: true
-            });
-        }
-        // polygon
-        if (a1.otype == 2) {
-          jo["polygon"] = new google.maps.Polygon(
             {
               path: jo["objpath"],
               optimized: false,
@@ -298,8 +290,48 @@ fhlmap.R = fhlmap.R || {
               geodesic: true
             });
 
+          // 成為 active 
+          jo["polyline"].addListener("click", pthis.set_active.bind(pthis, a1.id));
+
           // infowindow
-          jo["polygon"].addListener('click', pthis.set_active.bind(pthis, a1.id));
+          jo["polyline"].addListener('click', function () {
+            var txt = a1.cname + ((a1.otype == 2) ? "地區" : "");
+            var infowindow = new google.maps.InfoWindow({
+              content: txt
+            });
+            infowindow.open(pthis._map, marker);
+
+            setTimeout(function () {
+              infowindow.close();
+            }, 1200);
+          });
+        }
+        // polygon
+        if (a1.otype == 2) {
+          jo["polygon"] = new google.maps.Polygon(
+            {
+              path: jo["objpath"],
+              optimized: false,
+              zIndex: -1, //0以下(包含), 才能夠使 polyline 的mousemove 有效, 也測試過疊合的部分不會因為就畫的醜掉 (marker設一樣的zindex就會醜掉)
+              //map: pthis._map, //再用 set來打開
+              geodesic: true
+            });
+
+          // 成為 active 
+          jo["polygon"].addListener("click", pthis.set_active.bind(pthis, a1.id));
+
+          // infowindow
+          jo["polygon"].addListener('click', function () {
+            var txt = a1.cname + ((a1.otype == 2) ? "地區" : "");
+            var infowindow = new google.maps.InfoWindow({
+              content: txt
+            });
+            infowindow.open(pthis._map, marker);
+
+            setTimeout(function () {
+              infowindow.close();
+            }, 1200);
+          });
         }
 
         // infowindows 需要的 data
