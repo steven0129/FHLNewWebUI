@@ -292,6 +292,8 @@ fhlmap.R = fhlmap.R || {
           jo["polygon"] = new google.maps.Polygon(
             {
               path: jo["objpath"],
+              optimized: false,
+              zIndex: 0, //0以下(包含), 才能夠使 polyline 的mousemove 有效, 也測試過疊合的部分不會因為就畫的醜掉 (marker設一樣的zindex就會醜掉)
               //map: pthis._map, //再用 set來打開
               geodesic: true
             });
