@@ -425,12 +425,36 @@ fhlmap.R = fhlmap.R || {
     }
   }),
   top: React.createClass({
-    set_text: function (txt) {
-      this.setState({ "info": txt });
+    _click_help: function(){
+      this.setState({ isShowHelp: !this.state.isShowHelp });
     },
-    getInitialState: function () { return { "info": "請點擊marker" }; },
+    set_text: function (txt) {
+      this.setState({ "info": txt,"isShowHelp":false });
+    },
+    getInitialState: function () {
+      return { "info": "" };
+    },
     render: function () {
-      return React.createElement("div", {}, this.state.info);
+
+      var rbr = React.createElement("br", {});
+
+      var rhelp = null;
+      if (this.state.isShowHelp)
+      {
+        rhelp = React.createElement("div", { "onClick": this._click_help, style: {cursor:"pointer"}},
+        "help:", rbr,
+        "若marker標記無字,按F5刷新頁面.", rbr,
+        "可點擊marker", rbr,
+        "滑鼠經過直線,可測試距離,並且可用控制點改變路徑,右鍵可移除控制點"
+        );
+      }
+      else{
+        rhelp = React.createElement("span", { "onClick": this._click_help, style: {"background-color":"black","color":"white", "border-radius":"30px","cursor": "pointer","border":"solid 2px #505050","height":"1.5em","width":"3em","font-size":"10" } },
+        "help"
+        );
+      }
+      
+      return React.createElement("div", {}, this.state.info, rhelp);
     }
   }),
   tools: React.createClass({
