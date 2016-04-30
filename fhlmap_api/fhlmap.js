@@ -308,11 +308,13 @@ fhlmap.R = fhlmap.R || {
         }
         // polygon
         if (a1.otype == 2) {
+          var dis = google.maps.geometry.spherical.computeLength(jo["objpath"]);
+          var zindex = Math.ceil(-dis); // 士師記5章, 當polygon重疊時, 拿弗他利面績較小, 應該被選到, 以色列地區面積大.
           jo["polygon"] = new google.maps.Polygon(
             {
               path: jo["objpath"],
               optimized: false,
-              zIndex: -1, //0以下(包含), 才能夠使 polyline 的mousemove 有效, 也測試過疊合的部分不會因為就畫的醜掉 (marker設一樣的zindex就會醜掉)
+              zIndex: zindex, //0以下(包含), 才能夠使 polyline 的mousemove 有效, 也測試過疊合的部分不會因為就畫的醜掉 (marker設一樣的zindex就會醜掉)
               //map: pthis._map, //再用 set來打開
               geodesic: true
             });
