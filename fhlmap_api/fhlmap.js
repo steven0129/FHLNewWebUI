@@ -297,6 +297,9 @@ fhlmap.R = fhlmap.R || {
               //map: pthis._map, //再用 set來打開
               geodesic: true
             });
+
+          // infowindow
+          jo["polygon"].addListener('click', pthis.set_active.bind(pthis, a1.id));
         }
 
         // infowindows 需要的 data
