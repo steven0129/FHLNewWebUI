@@ -83,6 +83,12 @@ fhlmap.R = fhlmap.R || {
               path.push(active_marker.getPosition());
               path.push(datas[a1.Key]["marker"].getPosition());
 
+              if (datas[a1.Key]["marker"].getPosition() == null) {
+                console.debug("地圖資料庫可能有誤");
+                console.log(datas[a1.Key]); //士師記 摩西被判定為地名. (不要在click mark才能知道, 在 列舉的時候就該知道. 它的objpath 的 array length = 0 
+                return;
+              }
+
               var polyline = new google.maps.Polyline({
                 path: path,
                 geodesic: true,
@@ -92,6 +98,7 @@ fhlmap.R = fhlmap.R || {
                 strokeWeight: 7
                 //map: pthis._map
               });
+
               btwobj["polyline"] = polyline;
 
               var isdown = false;
@@ -221,7 +228,15 @@ fhlmap.R = fhlmap.R || {
             if (i % 2 == 1)
               objpath.push(new google.maps.LatLng(tmp1s[i - 1], tmp1s[i]));
           }
+
+          if (objpath.length == 0) {
+            console.debug("地圖資料庫可能有誤");
+            console.log(a1); //士師記 摩西被判定為地名. (不要在click mark才能知道, 在 列舉的時候就該知道. 它的objpath 的 array length = 0 
+            return;
+          }
         }
+
+        
 
         // mark
         {
