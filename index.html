@@ -37,6 +37,8 @@
     <script src="tsk_api/tsk.tskapi.js"></script>
     <script src="tsk_api/tsk.R.frame.oneref.js"></script>
 
+  <!-- 版權宣告要用的 2016.01.21(四) -->
+  <script src="copyright_api/copyright_api.js"></script>
     <!--[if IE]>
     <link rel="stylesheet" href="./libs/ie.css" type="text/css" media="screen, projection" />
     <![endif]-->
@@ -1572,6 +1574,9 @@ var fhlLecture={
   registerEvents:function(ps){
     var that=this.dom;
     that.find('.lec').click(function(){
+      if ($(this).hasClass('copyright')) //版本宣告,應該不能click snow add 2016.01.22(五)
+        return;
+
       ps.sec=parseInt($(this).attr('sec'));
       ps.chap=parseInt($(this).attr('chap'));
       $(that).find('.lec').removeClass('selected');
@@ -1783,6 +1788,16 @@ var fhlLecture={
       var html=control_str+'<div id="lecMainTitle">'+htmlTitle+'</div>';
       html+='<div id="lecMain">'+htmlContent+'</div>';
       dom.html(html);
+
+      // 2016.01.21(四) 版權宣告 snow 
+      {
+        var div_copyrigh = $('<div id="div_copyright" class="lec copyright"></div>');
+        $('#lecMain').append(div_copyrigh); // 放在 lecMain 才會在最下面. 因為 parent 有設 position 屬性
+        rr = React.createElement(copyright_api.R.frame, {ver:ps.version});
+        ss = React.render(rr, document.getElementById("div_copyright"));  // snow add 2016.01.21(四), 
+        // bug 小心: 版權宣告 render 必須在 dom.html 之後唷, 這樣才找到的 divCopyright 實體
+      }
+
       for(var i=0;i<maxRecordCnt;i++){
         var r=rspArr[maxRecordIdx].record[i];
         dom.find('.lec:eq('+i+')').attr('chap',r.chap);
