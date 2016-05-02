@@ -1,0 +1,32 @@
+﻿<!-- 串珠 -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+  <script src="/libs/jquery-1.11.3.js"></script>
+  <script src="/libs/react/react-0.13.1.min.js"></script>
+  <script src="/libs/react/react-with-addons-0.13.1.min.js"></script>
+  <script src="/libs/linq.js_ver2.2.0.2/jquery.linq.min.js"></script>
+  <script src="/libs/linq.js_ver2.2.0.2/linq.min.js"></script>
+  <script src="/libs/linq.js_ver2.2.0.2/linq-vsdoc.js"></script>
+  <script src="/search_api/fhl_api.js"></script>
+  <script src="/qsb_api/qsb.qsbapi.js"></script>
+  <script src="/search_api/sephp.react.txt.txtSn.js"></script>
+  <link href="/search_api/sephp_c_param.css" rel="stylesheet" />
+  <link href="/search_api/search.css" rel="stylesheet" />
+  <script src="/tsk_api/tsk.R.frame.oneref.js"></script>
+  <script src="/tsk_api/tsk.tskapi.js"></script>
+	<meta charset="utf-8" />
+</head>
+<body>
+  <div id="re1"></div>
+  <script>
+    // create object
+    tsk.r = {};
+    var jret = tsk.tskapi("Mark",1,1,false);
+    tsk.r.txt = React.createElement(tsk.R.frame, { txt_ori: jret.record[0].com_text });// r:react Ob:(Old Bible) Frame
+    React.render(tsk.r.txt, document.getElementById("re1"));
+  </script>
+</body>
+</html>

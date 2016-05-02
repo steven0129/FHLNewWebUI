@@ -1,0 +1,156 @@
+﻿<!-- 
+  2015.11.07(六) snow
+  在開發 串珠過程中, 發現原來串珠的核心是這個. 所以不如用這個來作. 以後要用 popup 或是 下面馬上顯示都ok 
+  
+  從 qsbphp.search_reference.js 實作來 copy, 但採用 react 方式
+   -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+  <script src="/libs/jquery-1.11.3.js"></script>
+  <script src="/libs/react/react-0.13.1.min.js"></script>
+  <script src="/libs/react/react-with-addons-0.13.1.min.js"></script>
+  <script src="/libs/linq.js_ver2.2.0.2/jquery.linq.min.js"></script>
+  <script src="/libs/linq.js_ver2.2.0.2/linq.min.js"></script>
+  <script src="/libs/linq.js_ver2.2.0.2/linq-vsdoc.js"></script>
+  <script src="/search_api/fhl_api.js"></script>
+  <script src="/search_api/sephp.react.txt.txtSn.js"></script>
+  <meta charset="utf-8" />
+  <link href="/search_api/sephp_c_param.css" rel="stylesheet" />
+  <link href="/search_api/search.css" rel="stylesheet" />
+  <script src="/qsb_api/qsb.qsbapi.js"></script>
+</head>
+<body>
+  <div id="re1" style="width:640px"></div>
+
+  <script>
+    
+    var txt_ori = "# 2Ki 1:8; Zec 13:4; Mt 3:4|";
+
+    var qsb = qsb || {};
+    
+    qsb.R = qsb.R || {
+      txt: React.createClass({
+        getDefaultProps: function () {
+          return {
+            pfn_sn_click: null,
+            default_version: "unv",
+            isSN: true,
+            isGB: true,
+            default_book: "Matt",
+            txt_ori: "# 2Ki 1:8; Zec 13:4-6; Mt 3:4 ;Mt 18  |"
+          };
+        },
+        getInitialState: function () {
+          return {
+          };
+        },
+        render: function () {
+          var jret = this.query_qsb();
+
+          // 檢查與保護
+          if (jret == null || jret.status != "success")
+            return React.createElement("div", {});
+
+
+          // 開始實作
+          var pthis = this;
+
+          var rs = jret.record.map(function (a1) {
+            var r = React.createElement(sephp.R.txt, { pfn_search_sn: pthis.props.pfn_sn_click, txt: a1["bible_text"], sn: [] });// r:react Ob:(Old Bible) Frame
+            return r;
+          });
+          return React.createElement("div", {},rs);
+        },
+        query_qsb() {
+          /// <summary> 搜尋參考結果 </summary>
+          /// <param type="string" name="keyword" parameterArray="false">以#為頭,|為結尾的字串</param>
+          /// <param type="string" name="default_book" parameterArray="false">當參考只有 21:2-5時, 就不知道是哪卷書了, 所以要傳入1個default書卷</param>
+          /// <param type="string" name="default_version" parameterArray="false" optional="true" integer="unv">參考只寫Ge 21:2-5, 不知道是哪個版本聖經, 所以要傳入1個default版本(預設unv)</param>
+          /// <param type="bool" name="isSN" parameterArray="false" optional="true">要把SN一同顯示出來嗎(預設false)</param>
+          /// <param type="bool" name="isGB" parameterArray="false" optional="true">是簡體結果顯示嗎(預設false)</param>
+          /// <returns type="T"></returns>
+          /// <example>
+          /// qsbphp.search_reference("# Ge 21:2-5; Jos 24:2,3; 1Ch 1:28; Isa 51:2; Lu 3:34; Ac 7:8|", "Gen", "unv");//繁體無SN
+          /// qsbphp.search_reference("# Ge 21:2-5; Jos 24:2,3; 1Ch 1:28; Isa 51:2; Lu 3:34; Ac 7:8|", "Gen", "unv",false,true);//簡體無SN
+          /// qsbphp.search_reference("# Ge 21:2-5; Jos 24:2,3; 1Ch 1:28; Isa 51:2; Lu 3:34; Ac 7:8|", "Gen", "unv", true);//繁體SN測試
+          /// </example>
+          /// add 2015.07.17(六)
+        
+          // 準備php需要變數
+          // 預設參數
+          var default_version = this.props.default_version;
+          var isSN = this.props.isSN;
+          var isGB = this.props.isGB;
+          var default_book = this.props.default_book;
+          var keyword = this.props.txt_ori;
+
+          var ibook = fhl.any_name_2_iBook(default_book);
+          if (ibook == -1)
+            throw "search_reference default_book=" + default_book + " 是不合規定的";
+          var engs = fhl.g_book_all[ibook][0];
+
+          // 採用 url + data 方式. 就是POST 方式, 否則 GET 可能會不足
+          var url = "qsb.php";
+          var data = "version=" + default_version + "&engs=" + engs;
+          if (isSN)
+            data += "&strong=1";
+          else
+            data += "&strong=0";
+          if (isGB)
+            data += "&gb=1";
+          else
+            data += "&gb=0";
+          var keyword2="";
+          {// 去頭去尾 # |
+            keyword2 = keyword.trim();
+            keyword2 = keyword2.substr(1, keyword2.length - 2);
+          }
+          //data += "&qstr=" + encodeURI(keyword2);//qstr的參數不包含#與|啦...要去掉orz..
+          data += "&qstr=" + keyword2;//qstr的參數不包含#與|啦...要去掉orz..
+          
+          // 準備查詢
+          var jret = null;
+
+          // 處理查詢後結果, 存到jret
+          var action_success = function (text, pdata) {
+            if (text.indexOf('"status":"success"') == -1) {
+              var r1 = '{"status":"success","record_count":0,"proc":0,"record":[],"ver":' + default_version + '}'; // 零筆的資訊
+              jret = JSON.parse(r1);
+            }
+            else {
+              jret = JSON.parse(text);
+              $.each(jret["record"], function (idx, r1) {
+                r1["ver"] = default_version;
+                r1["ibook"] = fhl.engs_2_iBook(r1.engs);
+              });
+            }
+            
+            // 函式結束於此.
+          };// action_success
+
+          fhl.json_api_text_post(url, data, action_success, function (text, pdata) { throw text; }, null, false);
+
+          console.log(jret);
+          // .status: "success"
+          // .record: [{},{},{}...] ..
+          // each .. 
+          // bible_text: "就<WG2532>差<WG3992><WTG5660>他们...", chap:2 , chinese:"太", engs:"Matt", ibook:39, sec:8, ver:"unv"
+          return jret;
+          
+        }//query_qsb function
+      }),
+
+    };
+  </script>
+  <script>
+    // create object
+    qsb.r = {};
+    qsb.r.txt = React.createElement(qsb.R.txt, {});// r:react Ob:(Old Bible) Frame
+
+    React.render(qsb.r.txt, document.getElementById("re1"));
+  </script>
+</body>
+</html>

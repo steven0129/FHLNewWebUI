@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     
@@ -30,6 +30,36 @@
     <link href="ob_api/ob_api.css" rel="stylesheet" />
     <link href="ob_api/ob_table.css" rel="stylesheet" />
     <script src="ob_api/obphp.js"></script>
+    <!--搜尋結果上色要用的 2015.10.29(四)-->
+    <script src="search_api/sephp.react.txt.txtSn.js"></script> 
+   <!--Start of 搜尋功能-->
+    <script src="libs/linq.js_ver2.2.0.2/linq.min.js"></script>
+    <script src="libs/linq.js_ver2.2.0.2/jquery.linq.min.js"></script>
+    <script src="search_api/abvphp_api.js"></script>
+    <script src="search_api/fhl_api.js"></script>
+    <!--<script src="preach_api/c_preach_frame.js"></script>--> <!--講道功能 被 preach_api 取代 react.js -->
+
+    <link href="search_api/search.css" rel="stylesheet" />
+    <script src="search_api/qsbphp.create_color_span_from_bible_text.js"></script>
+    <script src="search_api/sephp.se_record_2_qsb_str.js"></script>
+    <script src="search_api/qsbphp.search_reference.js"></script>
+    <script src="search_api/sephp.pre_search_sn.js"></script>
+    <script src="search_api/sephp.pre_search_keyword.js"></script>
+    <script src="search_api/sephp.create_dialog_presearch.js"></script>
+    <script src="search_api/sephp.create_dialog_search_result.js"></script>
+    <script src="search_api/sephp.search.js"></script>
+    <!-- 串珠要用的 2015.11.19(五) -->
+    <script src="qsb_api/qsb.qsbapi.js"></script>
+    <script src="tsk_api/tsk.tskapi.js"></script>
+    <script src="tsk_api/tsk.R.frame.oneref.js"></script>
+
+  <!-- 講道要用的 2016.01.13 取代原有的 c_preach_frame.js -->
+  <script src="commonR/processbar.js"></script>
+  <script src="commonR/audio.js"></script>
+  <script src="preach_api/preach_api.js"></script>
+
+  <!-- 版權宣告要用的 2016.01.21(四) -->
+  <script src="copyright_api/copyright_api.js"></script>
     <!--[if IE]>
     <link rel="stylesheet" href="./libs/ie.css" type="text/css" media="screen, projection" />
     <![endif]-->
@@ -38,11 +68,16 @@
     <!--<script src="https://fb.me/react-0.13.3.min.js"></script>
     <script src="https://fb.me/react-with-addons-0.13.3.min.js"></script>
     <script src="https://fb.me/JSXTransformer-0.13.3.js"></script>-->
+  <script src="fhlmap_api/fhlmap.js"></script>
+  <script src="fhlmap_api/fhlmap_main.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?signed_in=true&libraries=geometry&sensor=false"></script>
+  
 <script>
 
 var pageState;
 var currentSWVer="1.0";
 var isfirstob; // ob 典藏用
+
 function setPageState(ps){
   var isViewed=false;
   var dstIndex;
@@ -179,8 +214,10 @@ $(function(){
   fhlInfo.init(pageState);
   registerEvents(pageState);
 });
-
+//var urlJSON = "http://bkbible.fhl.net/json/"; // 小雪本機開發要用這個. 上線後要用下面那個 2015.10.24(六)
 var urlJSON="https://bkbible.fhl.net/json/";
+
+
 var chineseNumber=new Array( "零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十",
                             "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
                             "二十一", "二十二", "二十三", "二十四", "二十五", "二十六", "二十七", "二十八", "二十九", "三十",
@@ -263,7 +300,7 @@ function getAjaxUrl(func,ps,idx){
     };
 
     ret=ret.substring(0,ret.length-1);
-    //console.log(ret);
+    //console.log(ret); //https://bkbible.fhl.net/json/qp.php?engs=Rom&chap=16&sec=27&gb=0
     return ret;
   }
   return getFullAjaxUrl(func,ps,idx);
@@ -1163,7 +1200,7 @@ var versionSelect={
           url:ajaxUrl
         }).done(function(d,s,j){
           if(j){
-              console.log(j.responseText);
+              //console.log(j.responseText);
             var jsonObj=JSON.parse(j.responseText);
             that.data=jsonObj;
           }
@@ -1210,6 +1247,7 @@ var versionSelect={
           //Set Default version?
           if(ps.version.length==0){
             var o=that.dom.find('li:eq(0)');
+            $(o).addClass("selected"); 
             ps.version.push(o.attr('book'));
             ps.cname.push(o.attr('cname'));
           }
@@ -1562,6 +1600,9 @@ var fhlLecture={
   registerEvents:function(ps){
     var that=this.dom;
     that.find('.lec').click(function(){
+      if ($(this).hasClass('copyright')) //版本宣告,應該不能click snow add 2016.01.22(五)
+        return;
+
       ps.sec=parseInt($(this).attr('sec'));
       ps.chap=parseInt($(this).attr('chap'));
       $(that).find('.lec').removeClass('selected');
@@ -1773,6 +1814,16 @@ var fhlLecture={
       var html=control_str+'<div id="lecMainTitle">'+htmlTitle+'</div>';
       html+='<div id="lecMain">'+htmlContent+'</div>';
       dom.html(html);
+
+      // 2016.01.21(四) 版權宣告 snow 
+      {
+        var div_copyrigh = $('<div id="div_copyright" class="lec copyright"></div>');
+        $('#lecMain').append(div_copyrigh); // 放在 lecMain 才會在最下面. 因為 parent 有設 position 屬性
+        rr = React.createElement(copyright_api.R.frame, {ver:ps.version});
+        ss = React.render(rr, document.getElementById("div_copyright"));  // snow add 2016.01.21(四), 
+        // bug 小心: 版權宣告 render 必須在 dom.html 之後唷, 這樣才找到的 divCopyright 實體
+      }
+
       for(var i=0;i<maxRecordCnt;i++){
         var r=rspArr[maxRecordIdx].record[i];
         dom.find('.lec:eq('+i+')').attr('chap',r.chap);
@@ -1904,7 +1955,8 @@ var fhlInfoTitle={
               {"name":"講道","id":"fhlInfoPreach"},
               {"name":"串珠","id":"fhlInfoTsk"},
               {"name":"典藏","id":"fhlInfoOb"},
-              {"name":"有聲","id":"fhlInfoAudio"}
+              {"name":"有聲","id":"fhlInfoAudio"},
+              {"name":"地圖","id":"fhlInfoMap"}
       ];
     this.render(ps,this.dom);
   },
@@ -1918,6 +1970,7 @@ var fhlInfoTitle={
     $(selectAll).click(function(){
       $(selectAll).removeClass('selected');
       $(this).addClass('selected');
+      ps.titleIdold = ps.titleId; // add 2015.12.10(四) 為了有聲聖經,切換問題
       ps.titleId=$(this).attr('id');
       setPageState(ps);
       fhlInfoContent.render(ps,fhlInfoContent.dom);
@@ -2085,8 +2138,12 @@ var fhlInfoContent={
         $.ajax({
           url:ajaxUrl
         }).done(function(d,s,j){
+          //console.log(d);// d 是回傳 純文字版, 但直接 JSON.parse 就要要用到的資料 (羅16:24有問題)
+          //console.log(s);// s 是回傳 success 字串
+          //console.log(j);// j 是回傳 ??物件, 總之 j.responseText 即是 d
           if(j){
             var jsonObj=JSON.parse(j.responseText);
+            //console.log(jsonObj);
             var v_name=jsonObj.v_name;
             var version=jsonObj.version;
             var prev_chineses=jsonObj.prev.chineses;
@@ -2483,27 +2540,51 @@ var fhlInfoContent={
         do_preach(ps, dom);
         break;
       case "fhlInfoTsk":
-        dom.html("<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); '>施工中...</div>");
+        // 串珠 snow
+        {
+          var dom2 = document.getElementById("fhlInfoContent");
+          if ( dom2 != null )
+          {
+            var pfn_search_sn = function (sn) {
+              doSearch(sn, ps, false);
+            };
+            
+            var jret = tsk.tskapi(ps.engs, ps.chap, ps.sec, ps.gb ? true : false);
+            var r = React.createElement(tsk.R.frame, {
+              txt_ori: jret.record[0].com_text,
+              default_book: ps.engs,
+              default_version: "unv",
+              isSN: ps.strong == 1? true: false ,
+              isGB: ps.gb ? true : false,
+              cy: $(dom2).height(),
+              pfn_search_sn: pfn_search_sn //指定按下sn的結果
+            });
+            React.render(r, dom2);
+            var renderobj = React.render(r, dom2);
+          }
+        }
+        //dom.html("<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); '>施工中...</div>");
         break;
       case "fhlInfoOb":
         // 典藏 snow 
           var dom2 = document.getElementById("fhlInfoContent");
           if (dom2 != null)
           {
-            var renderobj = React.render(obphp.r.frame, dom2);
-            //console.log(ps);
-            renderobj.setProps({
+            var rProp = {
               ibook: getBookFunc("indexByEngs", ps.engs),
               ichap: ps.chap,
               isec: ps.sec,
-              isgb: (ps.gb!=0)?true:false
-            });
+              isgb: ps.gb ? true : false,
+              cy: $(dom2).height()
+            };
+            var r = React.createElement(obphp.R.frame, rProp);// r:react Ob:(Old Bible) Frame
+            var renderobj = React.render(r, dom2);
           }
         break;
       case "fhlInfoAudio":
 
         // 有聲聖經 snow
-        {
+        { 
           var pfn_callback = function fn_after_set(ibook, ichap) {
             ps.chineses = book[idx];
             ps.chap = ichap + 1; //因為是0-based 與 1-based
@@ -2513,12 +2594,22 @@ var fhlInfoContent={
             fhlInfo.render(pageState);
           };
           var idx = getBookFunc("index", ps.chineses); // 0-based
-          //ps.chap; // 1-based
-          audiobible.g_audiobible.set_book_chap(idx, ps.chap - 1, dom[0]);
-          audiobible.g_audiobible.m_pfn_after_set = pfn_callback;
+
+          // add 2015.12.10(四) snow, 若是沒加這個條件, (前兩個, 點到節的時候會重播...但根本是同一章,不該重播), (第3個...若只加前2個條件, 不加第3個, 在從其它功能(例如典藏...切回來有聲...就不會render了)
+          if (audiobible.g_audiobible.m_ibook != idx || audiobible.g_audiobible.m_ichap != ps.chap - 1 || ps.titleId != ps.titleIdold) {
+            //ps.chap; // 1-based
+            audiobible.g_audiobible.set_book_chap(idx, ps.chap - 1, dom[0]);
+            audiobible.g_audiobible.m_pfn_after_set = pfn_callback;
+          }
         }
-        break;                                        
+        break;
+      case "fhlInfoMap":
+        // 地圖 map
+        fhlmap_render(ps, dom);
+        // dom.html("<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); '>施工中...</div>");
+        break;
     }
+    fhlmap_titleId_prev = ps.titleId; //地圖 map 會用到, 因為切換走分頁, 再切換回來要 re-create render object. see also: fhlmap_render
   }
 };
 
@@ -2657,8 +2748,18 @@ var parsingPopUp={
         url:ajaxUrl
       }).done(function(d,s,j){
         var jsonObj=JSON.parse(j.responseText);
-        var title="<span class='searchSN' N="+jsonObj.record[0].dic_type+" k="+
-                jsonObj.record[0].sn+">";
+
+        // replace 2015.10.29(四) snow
+        // 使用 j.responseText 的 .sn=00430, 但顯示是 0430, 要用 0430作為關鍵字, 才會被畫上藍色, 因為00430不等於0430 (snow) 2015.10.29(四)
+        // 因此. 出現經文按下去的時候. 若是k=00430, 就不會有正確的畫出藍色
+        // "record":[{"sn":"00430","dic_text":"0430  ... 這是 j.responseText 局部
+        var snShow = /[0-9]+/.exec(jsonObj.record[0].dic_text); //add 2015.10.29(四)
+        var title = "";
+        if (snShow == null)
+          title = "<span class='searchSN' N=" + jsonObj.record[0].dic_type + " k=" + jsonObj.record[0].sn + ">";//原本的
+        else
+          title = "<span class='searchSN' N=" + jsonObj.record[0].dic_type + " k=" + snShow[0] + ">";
+        //var title="<span class='searchSN' N="+jsonObj.record[0].dic_type+" k="+jsonObj.record[0].sn+">"; //mark 2015.10.29(四) snow
         title+="出現經文</span></br>";
         var html=jsonObj.record[0].dic_text;
         html=parseDic(html);
@@ -2689,21 +2790,6 @@ var parsingPopUp={
 /***** End of fhlInfo *****/
   </script>
   <!--Start of 搜尋功能-->
-  <script src="libs/linq.js_ver2.2.0.2/linq.min.js"></script>
-  <script src="libs/linq.js_ver2.2.0.2/jquery.linq.min.js"></script>
-  <script src="search_api/abvphp_api.js"></script>
-  <script src="search_api/fhl_api.js"></script>
-  <script src="preach_api/c_preach_frame.js"></script> <!--講道功能-->
-
-  <link href="search_api/search.css" rel="stylesheet" />
-  <script src="search_api/qsbphp.create_color_span_from_bible_text.js"></script>
-  <script src="search_api/sephp.se_record_2_qsb_str.js"></script>
-  <script src="search_api/qsbphp.search_reference.js"></script>
-  <script src="search_api/sephp.pre_search_sn.js"></script>
-  <script src="search_api/sephp.pre_search_keyword.js"></script>
-  <script src="search_api/sephp.create_dialog_presearch.js"></script>
-  <script src="search_api/sephp.create_dialog_search_result.js"></script>
-  <script src="search_api/sephp.search.js"></script>
   <script>
     var searchTool={
         init:function(ps,dom){
@@ -2831,36 +2917,56 @@ var parsingPopUp={
   </script>
   <!--講道功能 2015.05.11-->
   <script>
+    var rRender_Preach;
+    var r_Preach;
+    var onset_Preach = function (engs, chap, sec) {
+      //console.log("外部onset");
+      rRender_Preach.setProps({ "engs": engs, "chap": chap, "sec": sec });
+    };
     function do_preach(ps,dom)
     {
-      // 設定 callback function (scphp.set會呼叫)
-      scphp.pfn_set_after = function pfn_set_after(rediv) {
-        dom.html(rediv);
+      var dom2 = document.getElementById("fhlInfoContent");
+      if (dom2 != null) {
+        r_Preach = React.createElement(preach_api.R.frame, {
+          "engs": ps.engs,
+          "chap": ps.chap,
+          "sec": ps.sec,
+          "onset": onset_Preach
+        });
+        rRender_Preach = React.render(r_Preach, dom2);
+      }
 
-        // 四個樣式可設定 (可變更...現在只是隨便設)
-        //for (var idx in scphp.divbooknames)//主題
-        //  $(scphp.divbooknames[idx]).addClass("search_type");
-        //for (var idx in scphp.divtitles)//範圍
-        //  $(scphp.divtitles[idx]).addClass("search_type");
-        for (var idx in scphp.divnexts)//範圍
-          $(scphp.divnexts[idx]).addClass("search_type");
-        for (var idx in scphp.divprevs)//範圍
-          $(scphp.divprevs[idx]).addClass("search_type");
-      }; // 設定 callback function (scphp.set會呼叫)
+      
 
-      // 設定 callback function (onclick時會呼叫)
-      scphp.pfn_goto_sec = function pfn_(engs, chap, sec) {
-        var idx = getBookFunc("indexByEngs", engs);
-        ps.chineses = book[idx];
-        ps.engs = engs;
-        ps.chap = chap;
-        ps.sec = sec;
-        bookSelect.render(pageState, bookSelect.dom);
-        fhlLecture.render(pageState, fhlLecture.dom);
-        fhlInfo.render(pageState);
-      }; // 設定 callback function (onclick時會呼叫)
 
-      scphp.set(ps.engs, ps.chap, ps.sec);
+      //// 設定 callback function (scphp.set會呼叫)
+      //scphp.pfn_set_after = function pfn_set_after(rediv) {
+      //  dom.html(rediv);
+
+      //  // 四個樣式可設定 (可變更...現在只是隨便設)
+      //  //for (var idx in scphp.divbooknames)//主題
+      //  //  $(scphp.divbooknames[idx]).addClass("search_type");
+      //  //for (var idx in scphp.divtitles)//範圍
+      //  //  $(scphp.divtitles[idx]).addClass("search_type");
+      //  for (var idx in scphp.divnexts)//範圍
+      //    $(scphp.divnexts[idx]).addClass("search_type");
+      //  for (var idx in scphp.divprevs)//範圍
+      //    $(scphp.divprevs[idx]).addClass("search_type");
+      //}; // 設定 callback function (scphp.set會呼叫)
+
+      //// 設定 callback function (onclick時會呼叫)
+      //scphp.pfn_goto_sec = function pfn_(engs, chap, sec) {
+      //  var idx = getBookFunc("indexByEngs", engs);
+      //  ps.chineses = book[idx];
+      //  ps.engs = engs;
+      //  ps.chap = chap;
+      //  ps.sec = sec;
+      //  bookSelect.render(pageState, bookSelect.dom);
+      //  fhlLecture.render(pageState, fhlLecture.dom);
+      //  fhlInfo.render(pageState);
+      //}; // 設定 callback function (onclick時會呼叫)
+
+      //scphp.set(ps.engs, ps.chap, ps.sec);
     }//do_preach
   </script><!--講道功能 2015.05.11-->
 </head>
