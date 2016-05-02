@@ -432,7 +432,7 @@ fhlmap.R = fhlmap.R || {
       this.setState({ "info": txt,"isShowHelp":false });
     },
     getInitialState: function () {
-      return { "info": "" };
+      return { "info": "(距離資料)" };
     },
     render: function () {
 
@@ -454,7 +454,7 @@ fhlmap.R = fhlmap.R || {
         );
       }
       
-      return React.createElement("div", {}, this.state.info, rhelp);
+      return React.createElement("div", {}, this.state.info, rbr,rhelp);
     }
   }),
   tools: React.createClass({
