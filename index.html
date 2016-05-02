@@ -30,6 +30,13 @@
     <link href="ob_api/ob_api.css" rel="stylesheet" />
     <link href="ob_api/ob_table.css" rel="stylesheet" />
     <script src="ob_api/obphp.js"></script>
+    <!--搜尋結果上色要用的 2015.10.29(四)-->
+    <script src="search_api/sephp.react.txt.txtSn.js"></script> 
+    <!-- 串珠要用的 2015.11.19(五) -->
+    <script src="qsb_api/qsb.qsbapi.js"></script>
+    <script src="tsk_api/tsk.tskapi.js"></script>
+    <script src="tsk_api/tsk.R.frame.oneref.js"></script>
+
     <!--[if IE]>
     <link rel="stylesheet" href="./libs/ie.css" type="text/css" media="screen, projection" />
     <![endif]-->
@@ -2487,7 +2494,30 @@ var fhlInfoContent={
         do_preach(ps, dom);
         break;
       case "fhlInfoTsk":
-        dom.html("<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); '>施工中...</div>");
+        // 串珠 snow
+        {
+          var dom2 = document.getElementById("fhlInfoContent");
+          if ( dom2 != null )
+          {
+            var pfn_search_sn = function (sn) {
+              doSearch(sn, ps, false);
+            };
+            
+            var jret = tsk.tskapi(ps.engs, ps.chap, ps.sec, ps.gb ? true : false);
+            var r = React.createElement(tsk.R.frame, {
+              txt_ori: jret.record[0].com_text,
+              default_book: ps.engs,
+              default_version: "unv",
+              isSN: ps.strong == 1? true: false ,
+              isGB: ps.gb ? true : false,
+              cy: $(dom2).height(),
+              pfn_search_sn: pfn_search_sn //指定按下sn的結果
+            });
+            React.render(r, dom2);
+            var renderobj = React.render(r, dom2);
+          }
+        }
+        //dom.html("<div style='position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); '>施工中...</div>");
         break;
       case "fhlInfoOb":
         // 典藏 snow 
