@@ -1,3 +1,5 @@
 .DS_Store
 *.swp
 log/*.log
+/.vs/FHLNewWebUI/v14/.suo
+/.vs/config/applicationhost.config

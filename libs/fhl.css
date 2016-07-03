@@ -1256,8 +1256,10 @@ nav#fhlTopMenu {
 }
 #fhlLecture .lec{
   /*font-size: 12pt;*/
-  padding: 0px 40px;
-  margin-left: 10px;
+  /*padding: 0px 40px;
+  margin-left: 10px; ... 原本mode=0版本*/
+  padding: 0px 0px;
+  margin:0px;
 }
 #fhlLecture .selected{
   background: linear-gradient(to right, rgba(150, 150, 100, 0.1) 0.2%, rgba(150, 150, 100, 0.4) 4%, rgba(150, 150, 100, 0.7) 10%, rgba(150, 150, 100, 0.7) 90%, rgba(150, 150, 100, 0.4) 96%, rgba(150, 150, 100, 0.1) 99.8%);

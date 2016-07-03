@@ -1478,7 +1478,7 @@ function getBibleText(col,ps,cbk,defCbk){
         sem--;
       }
     });
-  }
+  }//for each icol
   var def=setInterval(function(){
     if(sem==0){
       defCbk();
@@ -1598,18 +1598,35 @@ var fhlLecture={
     }
   },
   registerEvents:function(ps){
-    var that=this.dom;
+    var that = this.dom;
+
+    // snow add
+    var $lecMain = $('#lecMain');
+    var mode = $lecMain.attr('mode'); //0: 原本, 1:好選擇    
+
     that.find('.lec').click(function(){
       if ($(this).hasClass('copyright')) //版本宣告,應該不能click snow add 2016.01.22(五)
         return;
+      ps.sec = parseInt($(this).attr('sec'));
+      ps.chap = parseInt($(this).attr('chap'));
 
-      ps.sec=parseInt($(this).attr('sec'));
-      ps.chap=parseInt($(this).attr('chap'));
-      $(that).find('.lec').removeClass('selected');
-      $(this).addClass('selected');
+      if (mode == 0)
+      {
+        $(that).find('.lec').removeClass('selected');
+        $(this).addClass('selected');
+      }
+      else if ( mode == 1 )
+      {
+        var vers = $lecMain.find(".vercol");
+        vers.children().removeClass('selected');//這個要將前一次的selected去掉.不然會累積一堆
+        var verses = vers.find('[sec=' + ps.sec + ']');
+        verses.addClass('selected');
+      }
+
       setPageState(ps);
       fhlInfo.render(ps);
     });
+
     $('.versionName').click(function(e){
       var idx=ps.version.indexOf(versionSelect.dom.find('li[cname='+$(this).children('.closeButton').attr('cname')+']').attr('book'));
       ps.version.splice(idx,1);
@@ -1763,35 +1780,96 @@ var fhlLecture={
           //console.log("maxRecordCnt:"+maxRecordCnt+",maxRecordIdx:"+maxRecordIdx);
         }
       }
-      for(var i=0;i<maxRecordCnt;i++){
-        var maxR=rspArr[maxRecordIdx].record[i];
-        htmlContent+="<div class=lec style='font-size: "+ps.fontSize+"pt; line-height: "+ps.fontSize*1.25+"pt; margin-top: "+(ps.fontSize*1.25-15)+"px'>";
-        //htmlContent+="<div class=lecTitle>"+maxR.chap+":"+maxR.sec+"</div>";
-        for(j=0;j<rspArr.length;j++){
-          var chap=maxR.chap,sec=maxR.sec;
-          var rec=getRecord(rspArr[j].record,null,chap,sec);
-          //var r=rspArr[j].record[i];
-          if(rec!=null){
-            var bibleText=parseBibleText(rec.bible_text,ps,isOld,rspArr[j].v_name);
-            if(bibleText=="a")
-                bibleText="【併入上節】";
-          }else{
-            bibleText="";
+
+      var mode = 1;// 原本的. 就切回0
+      switch(mode)
+      {
+        case 0:
+          {
+            // 每一節 i, 以最大的那個版本為主 maxR 
+            for (var i = 0; i < maxRecordCnt; i++) {
+              var maxR = rspArr[maxRecordIdx].record[i];
+              htmlContent += "<div class=lec style='font-size: " + ps.fontSize + "pt; line-height: " + ps.fontSize * 1.25 + "pt; margin-top: " + (ps.fontSize * 1.25 - 15) + "px'>";
+              //htmlContent+="<div class=lecTitle>"+maxR.chap+":"+maxR.sec+"</div>";
+              for (j = 0; j < rspArr.length; j++) {
+                var chap = maxR.chap, sec = maxR.sec;
+                var rec = getRecord(rspArr[j].record, null, chap, sec);
+                //var r=rspArr[j].record[i];
+                if (rec != null) {
+                  var bibleText = parseBibleText(rec.bible_text, ps, isOld, rspArr[j].v_name);
+                  if (bibleText == "a")
+                    bibleText = "【併入上節】";
+                } else {
+                  bibleText = "";
+                }
+                if (rspArr[j].version == "bhs") {
+                  var bibleText = bibleText.split(/\n/g).reverse().join("<br>");
+                  //console.log(bibleText);
+                }
+                else if (rspArr[j].version == "cbol") {
+                  var bibleText = bibleText.split(/\n/g).join("<br>");
+                  //console.log(bibleText);
+                }
+                else if (rspArr[j].version == "nwh") {
+                  var bibleText = bibleText.split(/\n/g).join("<br>");
+                }
+                htmlContent += "<div class='lecContent " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + maxR.sec + "</span><span class='verseContent'>" + bibleText + "</span></div></div>";
+              }
+              htmlContent += "</div>";
+            }
           }
-          if(rspArr[j].version == "bhs"){
-              var bibleText = bibleText.split(/\n/g).reverse().join("<br>");
-              //console.log(bibleText);
+          break;
+        case 1:
+          {
+            // 注意, 這個變數, 只是暫存的, 它輽出的結果是 html 文字, 不包含自己, 所以lecMain屬性是在另種設定, 不是在這
+            // 不要再從這裡改 <div style=padding:10px 50px></div>, 不會有效果的.
+            var $htmlContent= $("<div id='lecMain'></div>");
+
+            var cx1 = 100 / rspArr.length ;
+            for (j = 0; j < rspArr.length; j++) {
+              // 分3欄
+              var onever = $("<div class='vercol' style='width:" + cx1 + "%;display:inline-block;vertical-align:top'></div>");
+              $htmlContent.append(onever);
+            }
+
+            // 每1欄內容
+            for (j = 0; j < rspArr.length; j++) { //each version
+              for (var i = 0; i < rspArr[j].record_count; i++) {//each sec
+                var maxR = rspArr[j].record[i]; //原 var maxR = rspArr[maxRecordIdx].record[i];
+                var chap = maxR.chap, sec = maxR.sec;
+                var rec = rspArr[j].record[i]; //原 var rec = getRecord(rspArr[j].record, null, chap, sec);
+                var bibleText = "";
+                if (rec != null) 
+                  bibleText = parseBibleText(rec.bible_text, ps, isOld, rspArr[j].v_name);
+                else
+                  bibleText = "";
+                if (bibleText == "a") {
+                  bibleText = "【併入上節】";
+                }
+                if (rspArr[j].version == "bhs") {
+                  bibleText = bibleText.split(/\n/g).reverse().join("<br>");
+                  //console.log(bibleText);
+                }
+                else if (rspArr[j].version == "cbol") {
+                  bibleText = bibleText.split(/\n/g).join("<br>");
+                  //console.log(bibleText);
+                }
+                else if (rspArr[j].version == "nwh") {
+                  bibleText = bibleText.split(/\n/g).join("<br>");
+                }
+
+                //$htmlContent.children().eq(j).append(
+                //$("<div>" + sec + " " + bibleText + "</div>"));
+
+                $htmlContent.children().eq(j).append(
+                $("<div chap="+chap+" sec=" +sec+ " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + bibleText + "</span></div></div>"));
+                
+              }//for each verse
+            }//for each version
+            htmlContent = $htmlContent.html();//.html()不包含自己 ... 所以這裡不是設 lecMain 有用的地方
+            
           }
-          else if(rspArr[j].version == "cbol"){
-              var bibleText = bibleText.split(/\n/g).join("<br>");
-              //console.log(bibleText);
-          }
-          else if(rspArr[j].version == "nwh"){
-              var bibleText = bibleText.split(/\n/g).join("<br>");
-          }
-          htmlContent+="<div class='lecContent "+rspArr[j].version+"'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>"+maxR.sec+"</span><span class='verseContent'>"+bibleText+"</span></div></div>";
-        }
-        htmlContent+="</div>";
+          break;
       }
 
       var control_str="";
@@ -1811,8 +1889,11 @@ var fhlLecture={
         }
       }
 
-      var html=control_str+'<div id="lecMainTitle">'+htmlTitle+'</div>';
-      html+='<div id="lecMain">'+htmlContent+'</div>';
+      var html = control_str + '<div id="lecMainTitle">' + htmlTitle + '</div>';
+      if ( mode == 0 )// 原本的
+        html += '<div id="lecMain" mode=0  style="padding:10px 50px">' + htmlContent + '</div>';
+      else if ( mode==1) //新版1 - 為了反白好選擇用的
+        html += '<div id="lecMain" mode=1 style="padding:10px 50px">' + htmlContent + '</div>';
       dom.html(html);
 
       // 2016.01.21(四) 版權宣告 snow 
@@ -1824,10 +1905,12 @@ var fhlLecture={
         // bug 小心: 版權宣告 render 必須在 dom.html 之後唷, 這樣才找到的 divCopyright 實體
       }
 
-      for(var i=0;i<maxRecordCnt;i++){
-        var r=rspArr[maxRecordIdx].record[i];
-        dom.find('.lec:eq('+i+')').attr('chap',r.chap);
-        dom.find('.lec:eq('+i+')').attr('sec',r.sec);
+      if ( mode == 0 ){
+        for(var i=0;i<maxRecordCnt;i++){
+          var r=rspArr[maxRecordIdx].record[i];
+          dom.find('.lec:eq('+i+')').attr('chap',r.chap);
+          dom.find('.lec:eq('+i+')').attr('sec',r.sec);
+        }
       }
       setCSS(col,ps);
       setFont();
