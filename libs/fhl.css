@@ -1055,6 +1055,12 @@ nav#fhlTopMenu {
 .traditional-simpleSwitch.onOffSwitch-inner:after {
     content: "繁";
 }
+.showmodeSwitch.onOffSwitch-inner:before {
+    content: "交錯";
+}
+.showmodeSwitch.onOffSwitch-inner:after {
+    content: "並列";
+}
 .onOffSwitch-switch {
     display: block; width: 19px; margin: -3.5px;
     background: #9E593D;
