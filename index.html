@@ -1615,7 +1615,7 @@ var fhlLecture={
         $(that).find('.lec').removeClass('selected');
         $(this).addClass('selected');
       }
-      else if ( mode == 1 )
+      else if (mode == 1 || mode == 2)
       {
         var vers = $lecMain.find(".vercol");
         vers.children().removeClass('selected');//這個要將前一次的selected去掉.不然會累積一堆
@@ -1870,6 +1870,65 @@ var fhlLecture={
             
           }
           break;
+        case 2:
+          {
+            // 注意, 這個變數, 只是暫存的, 它輽出的結果是 html 文字, 不包含自己, 所以lecMain屬性是在另種設定, 不是在這
+            // 不要再從這裡改 <div style=padding:10px 50px></div>, 不會有效果的.
+            var $htmlContent = $("<div id='lecMain'></div>");
+
+            var onever = $("<div class='vercol' style='vertical-align:top'></div>");
+            $htmlContent.append(onever);
+            
+            // 每一節內容
+            for (var i = 0; i < maxRecordCnt; i++) {
+              var maxR = rspArr[maxRecordIdx].record[i]; //原 var maxR = rspArr[maxRecordIdx].record[i];
+              var chap = maxR.chap, sec = maxR.sec;
+
+              for (var j = 0; j < rspArr.length; j++) {
+                var r1 = rspArr[j];
+                var vname =  " ("+r1.v_name+") "; //新譯本 合和本 etc
+
+                if (i >= r1.record_count)
+                {
+                  //此版本 本章節比較少, 
+                  onever.append(
+                $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + vname + "</span></div></div>"));
+                }
+                else
+                {
+                  
+                  var rec = rspArr[j].record[i]; //原 var rec = getRecord(rspArr[j].record, null, chap, sec);
+                  var bibleText = "";
+                  if (rec != null)
+                    bibleText = parseBibleText(rec.bible_text, ps, isOld, rspArr[j].v_name);
+                  else
+                    bibleText = "";
+                  if (bibleText == "a") {
+                    bibleText = "【併入上節】";
+                  }
+                  if (rspArr[j].version == "bhs") {
+                    bibleText = bibleText.split(/\n/g).reverse().join("<br>");
+                    //console.log(bibleText);
+                  }
+                  else if (rspArr[j].version == "cbol") {
+                    bibleText = bibleText.split(/\n/g).join("<br>");
+                    //console.log(bibleText);
+                  }
+                  else if (rspArr[j].version == "nwh") {
+                    bibleText = bibleText.split(/\n/g).join("<br>");
+                  }
+
+                  onever.append(
+                  $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + bibleText + vname +  "</span></div></div>"));
+
+                }
+                
+              }
+            }
+
+            htmlContent = $htmlContent.html();//.html()不包含自己 ... 所以這裡不是設 lecMain 有用的地方
+
+          } break;
       }
 
       var control_str="";
@@ -1890,10 +1949,7 @@ var fhlLecture={
       }
 
       var html = control_str + '<div id="lecMainTitle">' + htmlTitle + '</div>';
-      if ( mode == 0 )// 原本的
-        html += '<div id="lecMain" mode=0  style="padding:10px 50px">' + htmlContent + '</div>';
-      else if ( mode==1) //新版1 - 為了反白好選擇用的
-        html += '<div id="lecMain" mode=1 style="padding:10px 50px">' + htmlContent + '</div>';
+        html += '<div id="lecMain" mode='+mode+'  style="padding:10px 50px">' + htmlContent + '</div>';
       dom.html(html);
 
       if (mode == 1)
@@ -1905,8 +1961,7 @@ var fhlLecture={
         var qvers = qcols.Select(function (a1) { return $(a1).children(); });
         // console.log(qvers.ToArray());
 
-        var cntverse = qvers.Max('$.length');
-        for (var i = 0; i < cntverse; i++) {
+        for (var i = 0; i < maxRecordCnt; i++) {
           var qvers2 =
           qvers.Select(function (a1) { if (a1[i] == null) return null; return a1[i] });
           var maxcy = qvers2.Max(function (a1) { return a1 == null ? 0 : $(a1).height() });
