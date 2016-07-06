@@ -1014,6 +1014,8 @@ var show_mode = {
   init: function (ps, dom) {
     this.dom = dom;
     this.render(ps, this.dom);
+    if (ps.show_mode == null)
+      ps.show_mode = 1;
   },
   registerEvents: function (ps) {
     $('#show_modeSwitch').change(
