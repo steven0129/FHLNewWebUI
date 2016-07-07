@@ -146,6 +146,7 @@ function windowAdjust(){
     $('#fhlLecture').css({
         height: height + 'px'
     });
+    
     $('#fhlMidBottomWindow').css({'top': height +12+ 'px'});
 
     /* for fhlMidWinow width */
@@ -178,12 +179,14 @@ function windowAdjust(){
     }
     
     /*  */
-    $('#lecMain').scrollTop($('#lecMain').scrollTop()+$('#lecMain').find('.lec.selected').position().top-80);
+    $('#lecMain').scrollTop($('#lecMain').scrollTop() + $('#lecMain').find('.lec.selected').position().top - 80);
 }
 
 $(window).resize(function(e) {
     if (e.target == window){
-        windowAdjust();
+      windowAdjust();
+
+      fhlLecture.reshape(pageState);//ps的全域即是 pageState, 只是這裡沒有傳過來, 只好偷存取全域的 snow-add
     }
     
 });
@@ -534,7 +537,9 @@ var windowControl={
               $("#fhlLeftWindow").animate({left: -fhlLeftWindowWidth-15 + 'px'});
               $("#fhlToolBar").animate({left: '12px'});
               $("#fhlMidWindow").animate({left: '12px', width: $("#fhlMidWindow").width() + fhlLeftWindowWidth + 12 + 'px'}, function(){
-                  that.removeClass('selected');
+                that.removeClass('selected');
+
+                fhlLecture.reshape(ps);
               });
           }
           else{
@@ -543,9 +548,12 @@ var windowControl={
               $("#fhlLeftWindow").animate({left: '12px'});
               $("#fhlToolBar").animate({left: fhlLeftWindowWidth + 24 + 'px'});
               $("#fhlMidWindow").animate({left: fhlLeftWindowWidth+12+12 + 'px', width: $("#fhlMidWindow").width() - fhlLeftWindowWidth -12 + 'px'}, function(){
-                  that.addClass('selected');
+                that.addClass('selected');
+
+                fhlLecture.reshape(ps);
               });
           }
+          
       });
       $('#fhlMidBottomWindowControl').click(function(){
           if($(this).hasClass('selected')){
@@ -571,7 +579,9 @@ var windowControl={
               var fhlInfoWidth = $("#fhlInfo").width();
               $("#fhlInfo").animate({left: $(window).width() + 15 + 'px', right: -fhlInfoWidth-15 + 'px', width: fhlInfoWidth});
               $("#fhlMidWindow").animate({right: '12px', width: $("#fhlMidWindow").width() + fhlInfoWidth + 12 + 'px'}, function(){
-                  that.removeClass('selected');
+                that.removeClass('selected');
+
+                fhlLecture.reshape(ps);
               });
           }
           else{
@@ -579,7 +589,9 @@ var windowControl={
               var fhlInfoWidth = $("#fhlInfo").width();
               $("#fhlInfo").animate({left: $(window).width()-fhlInfoWidth-12 + 'px', right: '12px'});
               $("#fhlMidWindow").animate({right: fhlInfoWidth + 'px', width: $("#fhlMidWindow").width() - fhlInfoWidth - 12 + 'px'}, function(){
-                  that.addClass('selected');
+                that.addClass('selected');
+
+                fhlLecture.reshape(ps);
               });
           }
       });
@@ -1645,7 +1657,7 @@ var fhlLecture={
     }
   },
   reshape: function(ps){
-    /// <summary> 目前主要是 mode=1 時, align 要重新排過, 會用到的有 fontSize, resize, 裡面會有 show_mode 判斷式, 只要直接呼叫即可 </summary>
+    /// <summary> 目前主要是 mode=1 時, align 要重新排過, 會用到的有 fontSize, resize,(在windowAdjust裡呼叫) 裡面會有 show_mode 判斷式, 只要直接呼叫即可 </summary>
     if (ps.show_mode == 1) {
       /// @verbatim 對齊必須在 dom.html(html) 之後才作, 因為那時候才會有實體, 否則取出來的 height() 會是 0@endverbatim
       var $lecMain = $('#lecMain');
