@@ -1128,7 +1128,33 @@ var fontSizeTool={
     this.dom=dom;
     this.render(ps,this.dom);
   },
-  registerEvents:function(ps){
+  registerEvents: function (ps) {
+
+    function mode1align() {
+      if ( ps.show_mode == 1)
+      {
+        /// @verbatim 對齊必須在 dom.html(html) 之後才作, 因為那時候才會有實體, 否則取出來的 height() 會是 0@endverbatim
+        var $lecMain = $('#lecMain');
+        var cols = $lecMain.children();
+        var qcols = Enumerable.From(cols);
+        var qvers = qcols.Select(function (a1) { return $(a1).children(); });
+        // console.log(qvers.ToArray());
+        var maxRecordCnt = qvers.Max('$.length');
+        console.log(maxRecordCnt);
+
+        for (var i = 0; i < maxRecordCnt; i++) {
+          var qvers2 =
+          qvers.Select(function (a1) { if (a1[i] == null) return null; return a1[i] });
+          qvers2.ForEach(function (a1) { if (a1 != null) $(a1).height('100%'); }); //要先變為auto, 才能正確算 最大的 cy
+          var maxcy = qvers2.Max(function (a1) { return a1 == null ? 0 : $(a1).height() });
+          //var maxcy = Math.max.apply(Math, qvers2.Select(function (a1) { return $(a1).height(); }).ToArray());
+          console.log(maxcy);
+          qvers2.ForEach(function (a1) { if (a1 != null) $(a1).height(maxcy); });
+        }
+      }
+    }
+
+
       $('#fhlLectureFontSizeSliderBar').change(function() {
           $("#fhlLectureFontSize").val($('#fhlLectureFontSizeSliderBar').val());
           $('#fhlLecture .lec').css({
@@ -1141,7 +1167,9 @@ var fontSizeTool={
               'line-height':parseInt($('#fhlLectureFontSize').val())*1.25+'pt',
               'margin':parseInt($('#fhlLectureFontSize').val())*1.25-15+'px 0px'
           });
-          ps.fontSize=parseInt($('#fhlLectureFontSize').val());
+          ps.fontSize = parseInt($('#fhlLectureFontSize').val());
+
+          mode1align();
       });
       $('#fhlLectureFontSize').change(function() {
           if($('#fhlLectureFontSize').val()>60)
@@ -1159,7 +1187,9 @@ var fontSizeTool={
               'line-height':(parseInt($('#fhlLectureFontSize').val())+6)*1.25+'pt',
               'margin':parseInt($('#fhlLectureFontSize').val())*1.25-15+'px 0px'
           });
-          ps.fontSize=parseInt($('#fhlLectureFontSize').val());
+          ps.fontSize = parseInt($('#fhlLectureFontSize').val());
+
+          mode1align();
       });
       $('#fhlLectureFontSizeSmaller').click(function() {
           $('#fhlLectureFontSize').val(parseInt($('#fhlLectureFontSize').val())-2);
@@ -1176,7 +1206,9 @@ var fontSizeTool={
               'line-height':(parseInt($('#fhlLectureFontSize').val())+6)*1.25+'pt',
               'margin':parseInt($('#fhlLectureFontSize').val())*1.25-15+'px 0px'
           });
-          ps.fontSize=parseInt($('#fhlLectureFontSize').val());
+          ps.fontSize = parseInt($('#fhlLectureFontSize').val());
+
+          mode1align();
       });
       $('#fhlLectureFontSizeLarger').click(function() {
           $('#fhlLectureFontSize').val(parseInt($('#fhlLectureFontSize').val())+2);
@@ -1193,7 +1225,9 @@ var fontSizeTool={
               'line-height':(parseInt($('#fhlLectureFontSize').val())+6)*1.25+'pt',
               'margin':parseInt($('#fhlLectureFontSize').val())*1.25-15+'px 0px'
           });
-          ps.fontSize=parseInt($('#fhlLectureFontSize').val());
+          ps.fontSize = parseInt($('#fhlLectureFontSize').val());
+
+          mode1align();
       });
   },
   render:function(ps,dom){
@@ -1870,7 +1904,7 @@ var fhlLecture={
             var cx1 = 100 / rspArr.length ;
             for (j = 0; j < rspArr.length; j++) {
               // 分3欄
-              var onever = $("<div class='vercol' style='width:" + cx1 + "%;display:inline-block;vertical-align:top'></div>");
+              var onever = $("<div class='vercol' style='width:" + cx1 + "%;display:inline-block;vertical-align:top;font-size: " + ps.fontSize + "pt; line-height: " + ps.fontSize * 1.25 + "pt; margin-top: " + (ps.fontSize * 1.25 - 15) + "px'></div>");
               $htmlContent.append(onever);
             }
 
@@ -1918,7 +1952,7 @@ var fhlLecture={
             // 不要再從這裡改 <div style=padding:10px 50px></div>, 不會有效果的.
             var $htmlContent = $("<div id='lecMain'></div>");
 
-            var onever = $("<div class='vercol' style='vertical-align:top'></div>");
+            var onever = $("<div class='vercol' style='vertical-align:top;font-size: " + ps.fontSize + "pt; line-height: " + ps.fontSize * 1.25 + "pt; margin-top: " + (ps.fontSize * 1.25 - 15) + "px'></div>");
             $htmlContent.append(onever);
             
             // 每一節內容
