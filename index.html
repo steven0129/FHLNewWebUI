@@ -85,28 +85,7 @@ function setPageState(ps) {
     chap: ps.chap,
     sec: ps.sec
   });
-  
-
-
-  //var isViewed=false;
-  //var dstIndex;
-  //var tempPs;
-  //for(dstIndex=0;dstIndex<ps.history.length;dstIndex++){
-  //  tempPs=ps.history[dstIndex];
-  //  if(ps.chineses==tempPs.chineses&&ps.chap==tempPs.chap){
-  //      isViewed=true;
-  //      for(var i=dstIndex+1;i<ps.history.length;i++)
-  //          ps.history[i-1]=ps.history[i];
-  //      ps.history[ps.history.length-1]=tempPs;
-  //      break;
-  //  }
-  //}
-  
-  
-  //if(isViewed==false)
-  //  ps.history.push({chineses:ps.chineses,chap:ps.chap});
-  ////console.dir(ps);
-  //localStorage.setItem("fhlPageState",JSON.stringify(pageState));
+  // 這個 go, 會使變數存起來, 下起開啟網頁還是會保留原本的 history
 }
 function pageStateInit(){
     pageState={
@@ -1411,11 +1390,50 @@ function setBook(ps,bookName){
     console.log('setBook error:idx is null');
   }
 }
+  // 因為 document 的事件愈來愈多自訂的, 就不知道有哪些了, 
+  // 所以新增一個物件來管理 document 的事件
+var docEvent = (function () {
+  var $doc = $(document);
+  function DocEvent() { };
+  var fn = DocEvent.prototype;
+
+  fn.when_vh_init = function (fn) {
+    /// <summary> view history init </summary>
+    /// <param type="fn(e,p1)" name="fn" parameterArray="false">初始化完成時執行</param>
+    $doc.delegate('', {
+      vh_init: fn
+    });
+  };
+  fn.when_vh_idxchanged = function (fn) {
+    /// <summary> view history idx changed </summary>
+    /// <param type="fn(e,p1)" name="fn" parameterArray="false">_idx 改變時執行 </param>
+    $doc.delegate('', {
+      vh_idxchanged: fn
+    });
+  };
+  fn.when_vh_itemschanged = function (fn) {
+    /// <summary> view history idx changed </summary>
+    /// <param type="fn(e,p1)" name="fn" parameterArray="false"> 內容改變時執行 </param>
+    $doc.delegate('', {
+      vh_itemschanged: fn
+    });
+  };
+
+  fn.when_go = function (fn) {
+    /// <summary> setPageState() 被呼叫時, 將會觸發 go </summary>
+    /// <param type="fn(e,p1)" name="fn" parameterArray="false">p1:{chineses,chap,sec}</param>
+    $doc.delegate('', {
+      go: fn
+    });
+  };
+
+  return new DocEvent();
+})();
 $(document).ready(function () {
   (function () {
     var _datas = [];
     var _idx = -1;
-
+    
     function trigger_init() {
       $(document).trigger('vh_init', { datas: _datas, idx: _idx });
       trigger_vh_idxchanged();
@@ -1429,40 +1447,40 @@ $(document).ready(function () {
     }
 
     // callback
-    $(viewHistory.dom).delegate('', 'liclick', function (e, p1) {
+    // viewHistory主界面, 按下其中一個選項的時候, 觸發 idx changed
+    viewHistory.when_liclick(function (e, p1) {
       _idx = p1.idx;
       trigger_vh_idxchanged();
-    }).delegate('', 'clearall', function (e) {
+    });
+    // viewHistory主界面, 按下清除所有的時候, 觸發 items changed
+    viewHistory.when_clearall(function (e) {
       _datas = [_datas[0]];
       _idx = 0;
       trigger_vh_itemschanged();
     });
-    $(document).delegate('', 'go', function (e, p1) {
-      if (_idx == -1)
-      {
+    // 當別的地方切換章節的時候, 要新增到 datas, 並觸發事件
+    docEvent.when_go(function (e,p1) {
+      if (_idx == -1) {
         _datas = pageState.history;
         _idx = 0;
         trigger_init();
       }
-      // 若只是「切換節」而不是「書卷或是章」，就不處理
-      else if (_datas[_idx].chap != p1.chap || _datas[_idx].chineses != p1.chineses)
-      {
+        // 若只是「切換節」而不是「書卷或是章」，就不處理
+      else if (_datas[_idx].chap != p1.chap || _datas[_idx].chineses != p1.chineses) {
         // 清空 idx 前
         var a1 = _datas.slice(_idx, _datas.length);
         a1.unshift(p1);
         _datas = a1;
         _idx = 0;
-      
+
         trigger_vh_itemschanged();
       }
     });
-    // 當 history 改變的時候, 要儲存 ps
-    $(document).delegate('', {
-      vh_itemschanged: function(e,p1){
-        pageState.history = p1.datas;
-        setBook(pageState, pageState.chineses);
-        localStorage.setItem("fhlPageState", JSON.stringify(pageState));
-      }
+    // 當 history 改變的時候, 要儲存 ps (其實這個不知道放到哪個class較好, 就先放在這)
+    docEvent.when_vh_itemschanged(function (e, p1) {
+      pageState.history = p1.datas;
+      setBook(pageState, pageState.chineses);
+      localStorage.setItem("fhlPageState", JSON.stringify(pageState));
     });
     // 當 fhlLecture 中的 back click 或 nextclick 被按的時候
     fhlLecture.when_bclick_or_nclick(function () {
@@ -1502,7 +1520,7 @@ $(document).ready(function () {
         if ( pageState == null || pageState.history == null || pageState.history.length == 0)
           setTimeout(tryit, 777);//try it again
         else
-          $(document).trigger('go');
+          $(document).trigger('go', { chineses:pageState.chineses, chap:pageState.chap, sec: pageState.sec});
       }
       setTimeout(tryit, 777);
     })();
@@ -1524,16 +1542,27 @@ $(document).ready(function () {
     //  _datas.push({ chineses: '創', chap: 3 });
     //  _idx = 0;
 
-    //  trigger_vh_itemschanged();
-    //}, 3000);
-
   })();
 });
 
 var viewHistory = (function () {
   function ViewHistory() { };
   var fn = ViewHistory.prototype;
-  
+
+  fn.when_liclick = function (fn) {
+    /// <summary> ul 清單中的 li 被 click 的時候</summary>
+    /// <param type="fn(e,p1)" name="fn" parameterArray="false">{idx},回傳的是ul指在清單中的idx,</param>
+    $(viewHistory.dom).delegate('li', {
+      liclick: fn
+    });
+  };
+  fn.when_clearall = function (fn) {
+    /// <summary> 清除所有 被按下去的時候 </summary>
+    /// <param type="fn(e)" name="fn" parameterArray="false"></param>
+    $(viewHistory.dom).delegate('.clearHistory', {
+      clearall: fn
+    });
+  };
   fn.init = function (ps, dom) {
     this.dom = dom;
     this.render(ps, this.dom);
@@ -1682,96 +1711,6 @@ var viewHistory = (function () {
   }
   return new ViewHistory();
 })();
-//var viewHistory={
-//  init:function(ps,dom){
-//    this.dom=dom;
-//    this.render(ps,this.dom);
-//    var viewHistoryTop = $('#fhlLeftWindow').height() - 38 - 12;
-//    $('#viewHistory').css({ top: viewHistoryTop });
-
-//    var $vh = $('#viewHistory');
-//    $(document).delegate("", {
-//      vh_init: function (e, p1) {
-//        console.log(p1);
-//      },
-//      vh_itemschanged: function (e, p1) {
-//        console.log(p1);
-//      }
-//    });
-
-//  },
-//  registerEvents:function(ps){
-//    var that=this;
-//    $('#viewHistory p')
-//        .on('click', function(){
-//            var html =  $(this).html() == "▼&nbsp;歷史紀錄"?"&#9654;&nbsp;歷史紀錄":"&#9660;&nbsp;歷史紀錄";
-//            $(this).html(html);
-//            if($(this).html()=="▼&nbsp;歷史紀錄"){
-//                var viewHistoryHeight = Math.min(36*ps.history.length+64, $('#fhlLeftWindow').height() - $('#settings').height() - 38 - 36);
-//                var viewHistoryTop = $('#fhlLeftWindow').height() - viewHistoryHeight -12;
-//                if(viewHistoryHeight == 36*ps.history.length+64){
-//                    var versionSelectHeight = $("#versionSelect").height() + $("#viewHistory").height() - viewHistoryHeight;
-//                    $("#versionSelect").animate( { height: versionSelectHeight + 'px' }, { queue:false, duration:500 });
-//                }
-//                else{
-//                    $("#versionSelect").animate( { height: '38px' }, { queue:false, duration:500 });
-//                    $("#versionSelect p").html("&#9654;&nbsp;聖經版本選擇");
-//                }
-//                $("#viewHistory").animate( { height: viewHistoryHeight + 'px', top:viewHistoryTop + 'px' }, { queue:false, duration:500 });
-//                $("#viewHistory p").html("&#9660;&nbsp;歷史紀錄");
-//            }
-//            else{
-//                var versionSelectHeight = $('#fhlLeftWindow').height() - $('#settings').height() - 38 - 36;
-//                var viewHistoryTop = $('#fhlLeftWindow').height() - 38 - 12;
-//                $("#versionSelect").animate( { height: versionSelectHeight + 'px' }, { queue:false, duration:500 });
-//                $("#versionSelect p").html("&#9660;&nbsp;聖經版本選擇");
-//                $("#viewHistory").animate( { height: '38px', top: viewHistoryTop + 'px' }, { queue:false, duration:500 });
-//                $("#viewHistory p").html("&#9654;&nbsp;歷史紀錄");
-//            }
-//    });
-//    $('.clearHistory').click(function(){
-//      ps.history=[{chineses:ps.chineses,chap:ps.chap}];
-//      setPageState(ps);
-//      viewHistory.render(ps,viewHistory.dom);
-//    });
-//    this.dom.find('li')
-//    .css({cursor: "pointer"})
-//    .click(function(){
-//      setBook(ps,$(this).attr('chineses'));
-//      ps.chap=parseInt($(this).attr('chap'));
-//      ps.sec=1;
-//      setPageState(ps);
-//      bookSelect.render(ps,bookSelect.dom);
-//      fhlInfo.render(ps,fhlInfo.dom);
-//      fhlLecture.render(ps,fhlLecture.dom);
-//      that.render(ps,that.dom);
-//    });
-//    $('#viewHistoryScrollDiv').scroll(function() {
-//        $(this).addClass('scrolling');
-//        clearTimeout( $.data( this, "scrollCheck" ) );
-//        $.data( this, "scrollCheck", setTimeout(function() {
-//            $('#viewHistoryScrollDiv').removeClass('scrolling');
-//        }, 350) );
-//    });
-//  },
-//  render:function(ps,dom){
-//    var html="<div class='secondLevelInside'>";
-//    if($("#viewHistory").height()==38)
-//        html+="<p>&#9654;&nbsp;歷史紀錄</p>";
-//    else
-//        html+="<p>&#9660;&nbsp;歷史紀錄</p>";
-//    html+="<span class='clearHistory'>清除記錄</span><div id='viewHistoryScrollDiv'><ul class='viewHistoryList'>";
-//    for(var i=ps.history.length-1;i>=0;i--){
-//      var r=ps.history[i];
-//      html+="<li chineses="+r.chineses+" chap="+r.chap+">";
-//      html+=r.chineses+":"+r.chap+"</li>";
-//    }
-//    html+="</ul></div></div>";
-//    dom.html(html);
-//    this.registerEvents(ps);
-//  }
-//};
-
 
 /***** End of fhlLeftWindow *****/
 
@@ -1931,6 +1870,7 @@ var fhlLecture = (function () {
     this.dom = dom;
     this.render(ps, dom);
     $lecture = $(this.dom);
+    var $lecMain = $('#lecMain');
 
     // chapnext prev 變成1次事件就夠了
     $('.chapBack').click(function(e){
@@ -1982,6 +1922,89 @@ var fhlLecture = (function () {
         $('#lecMain').removeClass('scrolling');
       }, 350));
     });
+    // title 中的 version name lecMainTitle 是固定的, 加在 這個事件一次即可
+    $('#lecMainTitle').delegate('.versionName', {
+      click: function (e) {
+        var idx = ps.version.indexOf(versionSelect.dom.find('li[cname=' + $(this).children('.closeButton').attr('cname') + ']').attr('book'));
+        ps.version.splice(idx, 1);
+        ps.cname.splice(idx, 1);
+        versionSelect.dom.find('li[cname=' + $(this).children('.closeButton').attr('cname') + ']').removeClass('selected');
+        //Set Default version?
+        if (ps.version.length == 0) {
+          var o = versionSelect.dom.find('li:eq(0)');
+          ps.version.push(o.attr('book'));
+          ps.cname.push(o.attr('cname'));
+          versionSelect.dom.find('li:eq(0)').addClass('selected');
+        }
+        setPageState(ps);
+        fhlLecture.render(ps, fhlLecture.dom);
+        e.stopPropagation();
+      }
+    });
+    // 內容中的 lecMain 是固定的, 加在這個事件一次即可
+    $lecMain.delegate('.lec', {
+      click: function (e) {
+        if ($(this).hasClass('copyright')) //版本宣告,應該不能click snow add 2016.01.22(五)
+          return;
+        var mode = $lecMain.attr('mode'); //0: 原本, 1:好選擇    
+
+        ps.sec = parseInt($(this).attr('sec'));
+        ps.chap = parseInt($(this).attr('chap'));
+
+        if (mode == 0) {
+          $(that).find('.lec').removeClass('selected');
+          $(this).addClass('selected');
+        }
+        else if (mode == 1 || mode == 2) {
+          var vers = $lecMain.find(".vercol");
+          vers.children().removeClass('selected');//這個要將前一次的selected去掉.不然會累積一堆
+          var verses = vers.find('[sec=' + ps.sec + ']');
+          verses.addClass('selected');
+        }
+
+        setPageState(ps);
+        fhlInfo.render(ps);
+      }
+    });
+    // sn 的部分
+    $lecMain.delegate('.sn', {
+      click: function () {
+        if (ps.realTimePopUp != 1) {
+          var offset = $(this).offset();
+          offset.top += $(this).height();
+          ps.N = $(this).attr('N');
+          var k = $(this).html().replace(/&lt;/g, "").replace(/&gt;/g, "");
+          k = k.replace(/\(/g, "").replace(/\)/g, "");
+          k = k.replace(/\{/g, "").replace(/\}/g, "");
+          ps.k = k;
+          parsingPopUp.render(ps, parsingPopUp.dom, offset);
+        }
+      },
+      mouseenter: function () {
+        if (ps.realTimePopUp == 1) {
+          var offset = $(this).offset();
+          //console.log(offset.top);
+          offset.top += $(this).height();
+          //console.log(offset.top);
+          //console.log('');
+          ps.N = $(this).attr('N');
+          var k = $(this).html().replace(/&lt;/g, "").replace(/&gt;/g, "");
+          k = k.replace(/\(/g, "").replace(/\)/g, "");
+          k = k.replace(/\{/g, "").replace(/\}/g, "");
+          ps.k = k;
+          setTimeout(function () { parsingPopUp.render(ps, parsingPopUp.dom, offset) }, 100);
+        }
+      },
+      mouseleave: function () {
+        if(ps.realTimePopUp==1){
+          $.data( $('#parsingPopUp')[0], "parsingPopUpAutoCloseTimeout", setTimeout(function(){
+            if($('#parsingPopUp').css('display')=='block'){
+              $('#parsingPopUp').hide();
+            }
+          }, 100));
+        }
+      }
+    });
     // 向後巡覽 / 向前巡覽
     var $vhb = $('#viewHistoryButton');
     $vhb.delegate('.b', {
@@ -1994,7 +2017,8 @@ var fhlLecture = (function () {
       }
     });
     (function () {
-      function recolor(e,p1) {
+      function recolor(e, p1) {
+        /// <summary> 當 viewHistory 資料或 idx 變的時候, 要判斷是不是灰色 (document的vh_idxchanged事件與vh_itemschanged事件) </summary>
         if (p1.datas.length -1 == p1.idx)
           $vhb.find('.b').css('color', 'darkgray');
         else
@@ -2012,12 +2036,17 @@ var fhlLecture = (function () {
     })();
     
   };
+  
   fn.when_bclick_or_nclick = function (fnb, fnn) {
+    /// <summary> fhlLecture 提供的 event </summary>
+    /// <param type="fn(e)" name="fnb" parameterArray="false">older history view</param>
+    /// <param type="fn(e)" name="fnn" parameterArray="false">newer history view</param>
     $lecture.delegate('', {
       bclick: fnb,
       nclick: fnn
     });
   };
+  
   fn.selectLecture = function (book, chap, sec) {
     var that = this.dom;
     that.find('.lec').removeClass('selected');
@@ -2067,82 +2096,14 @@ var fhlLecture = (function () {
     var $lecMain = $('#lecMain');
     var mode = $lecMain.attr('mode'); //0: 原本, 1:好選擇    
 
-    that.find('.lec').click(function(){
-      if ($(this).hasClass('copyright')) //版本宣告,應該不能click snow add 2016.01.22(五)
-        return;
-      ps.sec = parseInt($(this).attr('sec'));
-      ps.chap = parseInt($(this).attr('chap'));
+    // 移到 init 完成
+    //that.find('.lec').click(function(){
 
-      if (mode == 0)
-      {
-        $(that).find('.lec').removeClass('selected');
-        $(this).addClass('selected');
-      }
-      else if (mode == 1 || mode == 2)
-      {
-        var vers = $lecMain.find(".vercol");
-        vers.children().removeClass('selected');//這個要將前一次的selected去掉.不然會累積一堆
-        var verses = vers.find('[sec=' + ps.sec + ']');
-        verses.addClass('selected');
-      }
-
-      setPageState(ps);
-      fhlInfo.render(ps);
-    });
-
-    $('.versionName').click(function(e){
-      var idx=ps.version.indexOf(versionSelect.dom.find('li[cname='+$(this).children('.closeButton').attr('cname')+']').attr('book'));
-      ps.version.splice(idx,1);
-      ps.cname.splice(idx,1);
-      versionSelect.dom.find('li[cname='+$(this).children('.closeButton').attr('cname')+']').removeClass('selected');
-      //Set Default version?
-      if(ps.version.length==0){
-        var o=versionSelect.dom.find('li:eq(0)');
-        ps.version.push(o.attr('book'));
-        ps.cname.push(o.attr('cname'));
-        versionSelect.dom.find('li:eq(0)').addClass('selected');
-      }
-      setPageState(ps);
-      fhlLecture.render(ps,fhlLecture.dom);
-      e.stopPropagation();
-
-    });
+    // 移到 init 完成
+    //$('.versionName').click(function(e){
     
-    if(ps.realTimePopUp==1){
-      $('.sn').mouseenter(function(){
-        var offset=$(this).offset();
-        //console.log(offset.top);
-        offset.top+=$(this).height();
-        //console.log(offset.top);
-        //console.log('');
-        ps.N=$(this).attr('N');
-        var k = $(this).html().replace(/&lt;/g,"").replace(/&gt;/g,"");
-        k = k.replace(/\(/g,"").replace(/\)/g,"");
-        k = k.replace(/\{/g,"").replace(/\}/g,"");
-        ps.k=k;
-        setTimeout(function(){ parsingPopUp.render(ps,parsingPopUp.dom,offset) }, 100);
-      });
-    }else{
-      $('.sn').click(function(){
-        var offset=$(this).offset();
-        offset.top+=$(this).height();
-        ps.N=$(this).attr('N');
-        var k = $(this).html().replace(/&lt;/g,"").replace(/&gt;/g,"");
-        k = k.replace(/\(/g,"").replace(/\)/g,"");
-        k = k.replace(/\{/g,"").replace(/\}/g,"");
-        ps.k=k;
-        parsingPopUp.render(ps,parsingPopUp.dom,offset);
-      });
-    }
-    $('.sn').mouseleave(function(){
-      if(ps.realTimePopUp==1){
-        $.data( $('#parsingPopUp')[0], "parsingPopUpAutoCloseTimeout", setTimeout(function(){
-          if($('#parsingPopUp').css('display')=='block'){
-            $('#parsingPopUp').hide();
-          }
-        }, 100));
-      }
-    });
+    // 移到 init 完成
+    //if(ps.realTimePopUp==1){
 
     //下面3個已經拉到 init , 只需1次
     //$('.chapBack').click(function(e){});
@@ -2192,7 +2153,6 @@ var fhlLecture = (function () {
       // title 
       var dtitle = $('#lecMainTitle');
       dtitle.empty();
-
       for (var i = 0; i < rspArr.length; i++) {
         var o = rspArr[i];
         if (o.v_name === "原文直譯(參考用)")
@@ -2387,434 +2347,7 @@ var fhlLecture = (function () {
   return new FhlLecture();
 })();
   
-//var fhlLecture={
-//  init:function(ps,dom){
-//    this.dom=dom;
-//    this.render(ps, dom);
-//  },
-//  selectLecture:function(book,chap,sec){
-//    var that=this.dom;
-//    that.find('.lec').removeClass('selected');
-//    var obj=that.find('.lec'+'[sec="'+sec+'"]');
-//    if(obj){
-//      obj.addClass('selected');
-//      if(obj.position()){
-//          var lecMain = $('#lecMain');
-//          if(obj.position().top>lecMain.height() || obj.position().top<0)
-//            lecMain.scrollTop(lecMain.scrollTop()+obj.position().top-lecMain.height()/2);
-//          else
-//            lecMain.scrollTop(lecMain.scrollTop());
-//      }
-//        else{
-//            console.log("no position");
-//        }
-//    }
-//  },
-//  reshape: function(ps){
-//    /// <summary> 目前主要是 mode=1 時, align 要重新排過, 會用到的有 fontSize, resize,(在windowAdjust裡呼叫) 裡面會有 show_mode 判斷式, 只要直接呼叫即可 </summary>
-//    if (ps.show_mode == 1) {
-//      /// @verbatim 對齊必須在 dom.html(html) 之後才作, 因為那時候才會有實體, 否則取出來的 height() 會是 0@endverbatim
-//      var $lecMain = $('#lecMain');
-//      var cols = $lecMain.children();
-//      var qcols = Enumerable.From(cols);
-//      var qvers = qcols.Select(function (a1) { return $(a1).children(); });
-//      // console.log(qvers.ToArray());
-//      var maxRecordCnt = qvers.Max('$.length');
-//      //console.log(maxRecordCnt);
 
-//      for (var i = 0; i < maxRecordCnt; i++) {
-//        var qvers2 =
-//        qvers.Select(function (a1) { if (a1[i] == null) return null; return a1[i] });
-//        qvers2.ForEach(function (a1) { if (a1 != null) $(a1).height('100%'); }); //要先變為auto, 才能正確算 最大的 cy
-//        var maxcy = qvers2.Max(function (a1) { return a1 == null ? 0 : $(a1).height() });
-//        //var maxcy = Math.max.apply(Math, qvers2.Select(function (a1) { return $(a1).height(); }).ToArray());
-//        //console.log(maxcy);
-//        qvers2.ForEach(function (a1) { if (a1 != null) $(a1).height(maxcy); });
-//      }
-//    }
-//  },
-//  registerEvents:function(ps){
-//    var that = this.dom;
-
-//    // snow add
-//    var $lecMain = $('#lecMain');
-//    var mode = $lecMain.attr('mode'); //0: 原本, 1:好選擇    
-
-//    that.find('.lec').click(function(){
-//      if ($(this).hasClass('copyright')) //版本宣告,應該不能click snow add 2016.01.22(五)
-//        return;
-//      ps.sec = parseInt($(this).attr('sec'));
-//      ps.chap = parseInt($(this).attr('chap'));
-
-//      if (mode == 0)
-//      {
-//        $(that).find('.lec').removeClass('selected');
-//        $(this).addClass('selected');
-//      }
-//      else if (mode == 1 || mode == 2)
-//      {
-//        var vers = $lecMain.find(".vercol");
-//        vers.children().removeClass('selected');//這個要將前一次的selected去掉.不然會累積一堆
-//        var verses = vers.find('[sec=' + ps.sec + ']');
-//        verses.addClass('selected');
-//      }
-
-//      setPageState(ps);
-//      fhlInfo.render(ps);
-//    });
-
-//    $('.versionName').click(function(e){
-//      var idx=ps.version.indexOf(versionSelect.dom.find('li[cname='+$(this).children('.closeButton').attr('cname')+']').attr('book'));
-//      ps.version.splice(idx,1);
-//      ps.cname.splice(idx,1);
-//      versionSelect.dom.find('li[cname='+$(this).children('.closeButton').attr('cname')+']').removeClass('selected');
-//      //Set Default version?
-//      if(ps.version.length==0){
-//        var o=versionSelect.dom.find('li:eq(0)');
-//        ps.version.push(o.attr('book'));
-//        ps.cname.push(o.attr('cname'));
-//        versionSelect.dom.find('li:eq(0)').addClass('selected');
-//      }
-//      setPageState(ps);
-//      fhlLecture.render(ps,fhlLecture.dom);
-//      e.stopPropagation();
-
-//    });
-//    /*$('.closeButton').click(function(e){
-//      var idx=ps.version.indexOf(versionSelect.dom.find('li[cname='+$(this).attr('cname')+']').attr('book'));
-//      ps.version.splice(idx,1);
-//      ps.cname.splice(idx,1);
-//      versionSelect.dom.find('li[cname='+$(this).attr('cname')+']').removeClass('selected');
-//      //Set Default version?
-//      if(ps.version.length==0){
-//        var o=versionSelect.dom.find('li:eq(0)');
-//        ps.version.push(o.attr('book'));
-//        ps.cname.push(o.attr('cname'));
-//        versionSelect.dom.find('li:eq(0)').addClass('selected');
-//      }
-//      setPageState(ps);
-//      fhlLecture.render(ps,fhlLecture.dom);
-//      e.stopPropagation();
-
-//    });*/
-//    if(ps.realTimePopUp==1){
-//      $('.sn').mouseenter(function(){
-//        var offset=$(this).offset();
-//        //console.log(offset.top);
-//        offset.top+=$(this).height();
-//        //console.log(offset.top);
-//          //console.log('');
-//        ps.N=$(this).attr('N');
-//        var k = $(this).html().replace(/&lt;/g,"").replace(/&gt;/g,"");
-//        k = k.replace(/\(/g,"").replace(/\)/g,"");
-//        k = k.replace(/\{/g,"").replace(/\}/g,"");
-//        ps.k=k;
-//          setTimeout(function(){ parsingPopUp.render(ps,parsingPopUp.dom,offset) }, 100);
-//      });
-//    }else{
-//      $('.sn').click(function(){
-//        var offset=$(this).offset();
-//        offset.top+=$(this).height();
-//        ps.N=$(this).attr('N');
-//        var k = $(this).html().replace(/&lt;/g,"").replace(/&gt;/g,"");
-//        k = k.replace(/\(/g,"").replace(/\)/g,"");
-//        k = k.replace(/\{/g,"").replace(/\}/g,"");
-//        ps.k=k;
-//        parsingPopUp.render(ps,parsingPopUp.dom,offset);
-//      });
-//    }
-//    $('.sn').mouseleave(function(){
-//        if(ps.realTimePopUp==1){
-//            $.data( $('#parsingPopUp')[0], "parsingPopUpAutoCloseTimeout", setTimeout(function(){
-//                if($('#parsingPopUp').css('display')=='block'){
-//                    $('#parsingPopUp').hide();
-//                }
-//            }, 100));
-//        }
-//    });
-//    $('.chapBack').click(function(e){
-//      var idx=getBookFunc("index",ps.chineses);
-//      if(ps.chap==1){
-//        ps.chineses=book[idx-1];
-//        ps.engs=bookEng[idx-1];
-//        ps.chap=bookChapters[idx-1];
-//      }else{
-//         if(ps.chap==0){
-//              ps.chap=ps.commentBackgroundChap;
-//              ps.sec=ps.commentBackgroundSec;
-//          }
-//          ps.chap--;
-//      }
-//      ps.sec=1;
-//      setPageState(ps);
-//      viewHistory.render(ps,viewHistory.dom);
-//      fhlLecture.render(ps,fhlLecture.dom);
-//      fhlInfo.render(ps);
-//      bookSelect.render(ps, bookSelect.dom);
-//      e.stopPropagation();
-//    });
-//    $('.chapNext').click(function(e){
-//      var idx=getBookFunc("index",ps.chineses);
-//      if(ps.chap==bookChapters[idx]){//if last chapter
-//        ps.chineses=book[idx+1];//book+1
-//        ps.engs=bookEng[idx+1];
-//        ps.chap=1;
-//      }else{
-//          if(ps.chap==0){
-//              ps.chap=ps.commentBackgroundChap;
-//              ps.sec=ps.commentBackgroundSec;
-//          }
-//        ps.chap++;
-//      }
-//      ps.sec=1;
-//      setPageState(ps);
-//      viewHistory.render(ps,viewHistory.dom);
-//      fhlLecture.render(ps,fhlLecture.dom);
-//      fhlInfo.render(ps);
-//      bookSelect.render(ps, bookSelect.dom);
-//      e.stopPropagation();
-//    });
-//    $('#lecMain').scroll(function() {
-//        $(this).addClass('scrolling');
-//        clearTimeout( $.data( this, "scrollCheck" ) );
-//        $.data( this, "scrollCheck", setTimeout(function() {
-//            $('#lecMain').removeClass('scrolling');
-//        }, 350) );
-//    });
-//  },
-//  render:function(ps,dom){
-//    //console.log('start of fhlLecture render');
-//      function reverse(s) {
-//  var o = '';
-//  for (var i = s.length - 1; i >= 0; i--)
-//    o += s[i];
-//  return o;
-//}      
-//    var that=this;
-//    var htmlTitle="";
-//    var htmlContent="";
-//    var col=ps.version.length;
-//    var rspArr=new Array();
-//    var idx=0;
-//    getBibleText(col,ps,function(o){
-//        rspArr.push(o);
-//    },function(){
-//      var isOld=checkOldNew(ps);
-//      var maxRecordCnt=0;
-//      var maxRecordIdx=0;
-//      rspArr=sortBibleVersion(rspArr,ps);
-//      for(var i=0;i<rspArr.length;i++){
-//        var o=rspArr[i];
-//        if(o.v_name==="原文直譯(參考用)")
-//            htmlTitle+="<div class=lecContent><div class=versionName>"+o.v_name+"<span class='closeButton' cname='"+"原文直譯"+"'>&#215</span></div></div>";
-//        else
-//            htmlTitle+="<div class=lecContent><div class=versionName>"+o.v_name+"<span class='closeButton' cname='"+o.v_name+"'>&#215</span></div></div>";
-        
-//        if(rspArr[i].record_count>maxRecordCnt){
-//          maxRecordCnt=rspArr[i].record_count;
-//          maxRecordIdx=i;
-//          //console.log("maxRecordCnt:"+maxRecordCnt+",maxRecordIdx:"+maxRecordIdx);
-//        }
-//      }
-
-//      //var mode = 1;// 原本的. 就切回0
-//      var mode = ps.show_mode;
-//      switch(mode)
-//      {
-//        case 0:
-//          {
-//            // 每一節 i, 以最大的那個版本為主 maxR 
-//            for (var i = 0; i < maxRecordCnt; i++) {
-//              var maxR = rspArr[maxRecordIdx].record[i];
-//              htmlContent += "<div class=lec style='font-size: " + ps.fontSize + "pt; line-height: " + ps.fontSize * 1.25 + "pt; margin-top: " + (ps.fontSize * 1.25 - 15) + "px'>";
-//              //htmlContent+="<div class=lecTitle>"+maxR.chap+":"+maxR.sec+"</div>";
-//              for (j = 0; j < rspArr.length; j++) {
-//                var chap = maxR.chap, sec = maxR.sec;
-//                var rec = getRecord(rspArr[j].record, null, chap, sec);
-//                //var r=rspArr[j].record[i];
-//                if (rec != null) {
-//                  var bibleText = parseBibleText(rec.bible_text, ps, isOld, rspArr[j].v_name);
-//                  if (bibleText == "a")
-//                    bibleText = "【併入上節】";
-//                } else {
-//                  bibleText = "";
-//                }
-//                if (rspArr[j].version == "bhs") {
-//                  var bibleText = bibleText.split(/\n/g).reverse().join("<br>");
-//                  //console.log(bibleText);
-//                }
-//                else if (rspArr[j].version == "cbol") {
-//                  var bibleText = bibleText.split(/\n/g).join("<br>");
-//                  //console.log(bibleText);
-//                }
-//                else if (rspArr[j].version == "nwh") {
-//                  var bibleText = bibleText.split(/\n/g).join("<br>");
-//                }
-//                htmlContent += "<div class='lecContent " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + maxR.sec + "</span><span class='verseContent'>" + bibleText + "</span></div></div>";
-//              }
-//              htmlContent += "</div>";
-//            }
-//          }
-//          break;
-//        case 1:
-//          {
-//            // 注意, 這個變數, 只是暫存的, 它輽出的結果是 html 文字, 不包含自己, 所以lecMain屬性是在另種設定, 不是在這
-//            // 不要再從這裡改 <div style=padding:10px 50px></div>, 不會有效果的.
-//            var $htmlContent= $("<div id='lecMain'></div>");
-
-//            var cx1 = 100 / rspArr.length ;
-//            for (j = 0; j < rspArr.length; j++) {
-//              // 分3欄
-//              var onever = $("<div class='vercol' style='width:" + cx1 + "%;display:inline-block;vertical-align:top;font-size: " + ps.fontSize + "pt; line-height: " + ps.fontSize * 1.25 + "pt; margin-top: " + (ps.fontSize * 1.25 - 15) + "px'></div>");
-//              $htmlContent.append(onever);
-//            }
-
-//            // 每1欄內容
-//            for (j = 0; j < rspArr.length; j++) { //each version
-//              for (var i = 0; i < rspArr[j].record_count; i++) {//each sec
-//                var maxR = rspArr[j].record[i]; //原 var maxR = rspArr[maxRecordIdx].record[i];
-//                var chap = maxR.chap, sec = maxR.sec;
-//                var rec = rspArr[j].record[i]; //原 var rec = getRecord(rspArr[j].record, null, chap, sec);
-//                var bibleText = "";
-//                if (rec != null) 
-//                  bibleText = parseBibleText(rec.bible_text, ps, isOld, rspArr[j].v_name);
-//                else
-//                  bibleText = "";
-//                if (bibleText == "a") {
-//                  bibleText = "【併入上節】";
-//                }
-//                if (rspArr[j].version == "bhs") {
-//                  bibleText = bibleText.split(/\n/g).reverse().join("<br>");
-//                  //console.log(bibleText);
-//                }
-//                else if (rspArr[j].version == "cbol") {
-//                  bibleText = bibleText.split(/\n/g).join("<br>");
-//                  //console.log(bibleText);
-//                }
-//                else if (rspArr[j].version == "nwh") {
-//                  bibleText = bibleText.split(/\n/g).join("<br>");
-//                }
-
-//                //$htmlContent.children().eq(j).append(
-//                //$("<div>" + sec + " " + bibleText + "</div>"));
-
-//                $htmlContent.children().eq(j).append(
-//                $("<div chap="+chap+" sec=" +sec+ " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + bibleText + "</span></div></div>"));
-                
-//              }//for each verse
-//            }//for each version
-//            htmlContent = $htmlContent.html();//.html()不包含自己 ... 所以這裡不是設 lecMain 有用的地方
-            
-//          }
-//          break;
-//        case 2:
-//          {
-//            // 注意, 這個變數, 只是暫存的, 它輽出的結果是 html 文字, 不包含自己, 所以lecMain屬性是在另種設定, 不是在這
-//            // 不要再從這裡改 <div style=padding:10px 50px></div>, 不會有效果的.
-//            var $htmlContent = $("<div id='lecMain'></div>");
-
-//            var onever = $("<div class='vercol' style='vertical-align:top;font-size: " + ps.fontSize + "pt; line-height: " + ps.fontSize * 1.25 + "pt; margin-top: " + (ps.fontSize * 1.25 - 15) + "px'></div>");
-//            $htmlContent.append(onever);
-            
-//            // 每一節內容
-//            for (var i = 0; i < maxRecordCnt; i++) {
-//              var maxR = rspArr[maxRecordIdx].record[i]; //原 var maxR = rspArr[maxRecordIdx].record[i];
-//              var chap = maxR.chap, sec = maxR.sec;
-
-//              for (var j = 0; j < rspArr.length; j++) {
-//                var r1 = rspArr[j];
-//                var vname =  " ("+r1.v_name+") "; //新譯本 合和本 etc
-
-//                if (i >= r1.record_count)
-//                {
-//                  //此版本 本章節比較少, 
-//                  onever.append(
-//                $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + vname + "</span></div></div>"));
-//                }
-//                else
-//                {
-                  
-//                  var rec = rspArr[j].record[i]; //原 var rec = getRecord(rspArr[j].record, null, chap, sec);
-//                  var bibleText = "";
-//                  if (rec != null)
-//                    bibleText = parseBibleText(rec.bible_text, ps, isOld, rspArr[j].v_name);
-//                  else
-//                    bibleText = "";
-//                  if (bibleText == "a") {
-//                    bibleText = "【併入上節】";
-//                  }
-//                  if (rspArr[j].version == "bhs") {
-//                    bibleText = bibleText.split(/\n/g).reverse().join("<br>");
-//                    //console.log(bibleText);
-//                  }
-//                  else if (rspArr[j].version == "cbol") {
-//                    bibleText = bibleText.split(/\n/g).join("<br>");
-//                    //console.log(bibleText);
-//                  }
-//                  else if (rspArr[j].version == "nwh") {
-//                    bibleText = bibleText.split(/\n/g).join("<br>");
-//                  }
-
-//                  onever.append(
-//                  $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + bibleText + vname +  "</span></div></div>"));
-
-//                }
-                
-//              }
-//            }
-
-//            htmlContent = $htmlContent.html();//.html()不包含自己 ... 所以這裡不是設 lecMain 有用的地方
-
-//          } break;
-//      }
-
-//      var control_str="";
-//      var bookName=getBookFunc("bookFullName",ps.chineses);
-//      if(bookName!="failed"){
-//        if(ps.chineses==book[0]&&ps.chap==1){
-//          control_str+="";
-//        }else{
-//          control_str+="<div class='chapBack chapControl'><span>&#x276e;</span></div>";
-//        }
-//        /*control_str+="<span class='chapSelect'>"+bookName;
-//        control_str+="&nbsp&nbsp"+ps.chap+"</span>";*/
-//        if(ps.chineses==book[65]&&ps.chap==22){
-//          control_str+="";
-//        }else{
-//          control_str+="<div class='chapNext chapControl'><span>&#x276f;</span></div>";
-//        }
-//      }
-
-//      var html = control_str + '<div id="lecMainTitle">' + htmlTitle + '</div>';
-//        html += '<div id="lecMain" mode='+mode+'  style="padding:10px 50px">' + htmlContent + '</div>';
-//      dom.html(html);
-
-//      fhlLecture.reshape(ps);
-
-//      // 2016.01.21(四) 版權宣告 snow 
-//      {
-//        var div_copyrigh = $('<div id="div_copyright" class="lec copyright"></div>');
-//        $('#lecMain').append(div_copyrigh); // 放在 lecMain 才會在最下面. 因為 parent 有設 position 屬性
-//        rr = React.createElement(copyright_api.R.frame, {ver:ps.version});
-//        ss = React.render(rr, document.getElementById("div_copyright"));  // snow add 2016.01.21(四), 
-//        // bug 小心: 版權宣告 render 必須在 dom.html 之後唷, 這樣才找到的 divCopyright 實體
-//      }
-
-//      if ( mode == 0 ){
-//        for(var i=0;i<maxRecordCnt;i++){
-//          var r=rspArr[maxRecordIdx].record[i];
-//          dom.find('.lec:eq('+i+')').attr('chap',r.chap);
-//          dom.find('.lec:eq('+i+')').attr('sec',r.sec);
-//        }
-//      }
-//      setCSS(col,ps);
-//      setFont();
-//      that.selectLecture(null,null,ps.sec);
-//      that.registerEvents(ps);
-//      //console.log('End of fhlLecture render');
-//    });
-//  }
-//};
 
 var fhlMidBottomWindow={
   init:function(ps,dom){
