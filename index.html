@@ -78,26 +78,35 @@ var pageState;
 var currentSWVer="1.0";
 var isfirstob; // ob 典藏用
 
-function setPageState(ps){
-  var isViewed=false;
-  var dstIndex;
-  var tempPs;
-  for(dstIndex=0;dstIndex<ps.history.length;dstIndex++){
-    tempPs=ps.history[dstIndex];
-    if(ps.chineses==tempPs.chineses&&ps.chap==tempPs.chap){
-        isViewed=true;
-        for(var i=dstIndex+1;i<ps.history.length;i++)
-            ps.history[i-1]=ps.history[i];
-        ps.history[ps.history.length-1]=tempPs;
-        break;
-    }
-  }
+function setPageState(ps) {
+  
+  $(document).trigger('go', {
+    chineses: ps.chineses,
+    chap: ps.chap,
+    sec: ps.sec
+  });
+  
+
+
+  //var isViewed=false;
+  //var dstIndex;
+  //var tempPs;
+  //for(dstIndex=0;dstIndex<ps.history.length;dstIndex++){
+  //  tempPs=ps.history[dstIndex];
+  //  if(ps.chineses==tempPs.chineses&&ps.chap==tempPs.chap){
+  //      isViewed=true;
+  //      for(var i=dstIndex+1;i<ps.history.length;i++)
+  //          ps.history[i-1]=ps.history[i];
+  //      ps.history[ps.history.length-1]=tempPs;
+  //      break;
+  //  }
+  //}
   
   
-  if(isViewed==false)
-    ps.history.push({chineses:ps.chineses,chap:ps.chap});
-  //console.dir(ps);
-  localStorage.setItem("fhlPageState",JSON.stringify(pageState));
+  //if(isViewed==false)
+  //  ps.history.push({chineses:ps.chineses,chap:ps.chap});
+  ////console.dir(ps);
+  //localStorage.setItem("fhlPageState",JSON.stringify(pageState));
 }
 function pageStateInit(){
     pageState={
@@ -1402,84 +1411,334 @@ function setBook(ps,bookName){
     console.log('setBook error:idx is null');
   }
 }
-var viewHistory={
-  init:function(ps,dom){
-    this.dom=dom;
-    this.render(ps,this.dom);
-    var viewHistoryTop = $('#fhlLeftWindow').height() - 38 - 12;
-    $('#viewHistory').css({top:viewHistoryTop});
-  },
-  registerEvents:function(ps){
-    var that=this;
-    $('#viewHistory p')
-        .on('click', function(){
-            var html =  $(this).html() == "▼&nbsp;歷史紀錄"?"&#9654;&nbsp;歷史紀錄":"&#9660;&nbsp;歷史紀錄";
-            $(this).html(html);
-            if($(this).html()=="▼&nbsp;歷史紀錄"){
-                var viewHistoryHeight = Math.min(36*ps.history.length+64, $('#fhlLeftWindow').height() - $('#settings').height() - 38 - 36);
-                var viewHistoryTop = $('#fhlLeftWindow').height() - viewHistoryHeight -12;
-                if(viewHistoryHeight == 36*ps.history.length+64){
-                    var versionSelectHeight = $("#versionSelect").height() + $("#viewHistory").height() - viewHistoryHeight;
-                    $("#versionSelect").animate( { height: versionSelectHeight + 'px' }, { queue:false, duration:500 });
-                }
-                else{
-                    $("#versionSelect").animate( { height: '38px' }, { queue:false, duration:500 });
-                    $("#versionSelect p").html("&#9654;&nbsp;聖經版本選擇");
-                }
-                $("#viewHistory").animate( { height: viewHistoryHeight + 'px', top:viewHistoryTop + 'px' }, { queue:false, duration:500 });
-                $("#viewHistory p").html("&#9660;&nbsp;歷史紀錄");
-            }
-            else{
-                var versionSelectHeight = $('#fhlLeftWindow').height() - $('#settings').height() - 38 - 36;
-                var viewHistoryTop = $('#fhlLeftWindow').height() - 38 - 12;
-                $("#versionSelect").animate( { height: versionSelectHeight + 'px' }, { queue:false, duration:500 });
-                $("#versionSelect p").html("&#9660;&nbsp;聖經版本選擇");
-                $("#viewHistory").animate( { height: '38px', top: viewHistoryTop + 'px' }, { queue:false, duration:500 });
-                $("#viewHistory p").html("&#9654;&nbsp;歷史紀錄");
-            }
-    });
-    $('.clearHistory').click(function(){
-      ps.history=[{chineses:ps.chineses,chap:ps.chap}];
-      setPageState(ps);
-      viewHistory.render(ps,viewHistory.dom);
-    });
-    this.dom.find('li')
-    .css({cursor: "pointer"})
-    .click(function(){
-      setBook(ps,$(this).attr('chineses'));
-      ps.chap=parseInt($(this).attr('chap'));
-      ps.sec=1;
-      setPageState(ps);
-      bookSelect.render(ps,bookSelect.dom);
-      fhlInfo.render(ps,fhlInfo.dom);
-      fhlLecture.render(ps,fhlLecture.dom);
-      that.render(ps,that.dom);
-    });
-    $('#viewHistoryScrollDiv').scroll(function() {
-        $(this).addClass('scrolling');
-        clearTimeout( $.data( this, "scrollCheck" ) );
-        $.data( this, "scrollCheck", setTimeout(function() {
-            $('#viewHistoryScrollDiv').removeClass('scrolling');
-        }, 350) );
-    });
-  },
-  render:function(ps,dom){
-    var html="<div class='secondLevelInside'>";
-    if($("#viewHistory").height()==38)
-        html+="<p>&#9654;&nbsp;歷史紀錄</p>";
-    else
-        html+="<p>&#9660;&nbsp;歷史紀錄</p>";
-    html+="<span class='clearHistory'>清除記錄</span><div id='viewHistoryScrollDiv'><ul class='viewHistoryList'>";
-    for(var i=ps.history.length-1;i>=0;i--){
-      var r=ps.history[i];
-      html+="<li chineses="+r.chineses+" chap="+r.chap+">";
-      html+=r.chineses+":"+r.chap+"</li>";
+$(document).ready(function () {
+  (function () {
+    var _datas = [];
+    var _idx = -1;
+
+    function trigger_init() {
+      $(document).trigger('vh_init', { datas: _datas, idx: _idx });
     }
-    html+="</ul></div></div>";
-    dom.html(html);
+    function trigger_vh_idxchanged() {
+      $(document).trigger('vh_idxchanged', { datas: _datas, idx: _idx });
+    }
+    function trigger_vh_itemschanged() {
+      $(document).trigger('vh_itemschanged', { datas: _datas, idx: _idx });
+    }
+
+    // 等待 ps.history ok 就觸發觸始化
+    (function () {
+      function tryit() {
+        if ( pageState == null || pageState.history == null || pageState.history.length == 0)
+          setTimeout(tryit, 777);//try it again
+        else
+          $(document).trigger('go');
+      }
+      setTimeout(tryit, 777);
+    })();
+
+    // callback
+    $(viewHistory.dom).delegate('', 'liclick', function (e, p1) {
+      _idx = p1.idx;
+      trigger_vh_idxchanged();
+    }).delegate('', 'clearall', function (e) {
+      _datas = [_datas[0]];
+      _idx = 0;
+      trigger_vh_itemschanged();
+    });
+    $(document).delegate('', 'go', function (e, p1) {
+      if (_idx == -1)
+      {
+        _datas = pageState.history;
+        _idx = 0;
+        trigger_init();
+      }
+      // 若只是「切換節」而不是「書卷或是章」，就不處理
+      else if (_datas[_idx].chap != p1.chap || _datas[_idx].chineses != p1.chineses)
+      {
+        // 清空 idx 前
+        var a1 = _datas.slice(_idx, _datas.length);
+        a1.unshift(p1);
+        _datas = a1;
+        _idx = 0;
+      
+        trigger_vh_itemschanged();
+      }
+    });
+    $(document).delegate('',{
+      vh_itemschanged: function(e,p1){
+        pageState.history = p1.datas;
+        setBook(pageState, pageState.chineses);
+        localStorage.setItem("fhlPageState", JSON.stringify(pageState));
+      }
+    });
+
+    // 模擬 1
+    //_datas.push({ chineses: '創', chap: 1 });
+    //_datas.push({ chineses: '出', chap: 1 });
+    // _idx = 0;
+    // trigger_init();
+
+    // 模擬 2
+    //setTimeout(function () {
+    //  _idx = 1;
+    //  trigger_vh_idxchanged();
+    //}, 2000);
+
+    // 模擬 3
+    //setTimeout(function () {
+    //  _datas.push({ chineses: '創', chap: 3 });
+    //  _idx = 0;
+
+    //  trigger_vh_itemschanged();
+    //}, 3000);
+
+  })();
+});
+
+var viewHistory = (function () {
+  function ViewHistory() { };
+  var fn = ViewHistory.prototype;
+  
+  fn.init = function (ps, dom) {
+    this.dom = dom;
+    this.render(ps, this.dom);
+    var viewHistoryTop = $('#fhlLeftWindow').height() - 38 - 12;
+    $('#viewHistory').css({ top: viewHistoryTop });
+
+    
+    var $vh = $('#viewHistory');
+    function renderList(datas) {
+      /// <summary> 用於畫 li 清單, ul先被清空, 再一一加入 </summary>
+      /// <param type="[{.chineses, .chap},{},{}]" name="datas" parameterArray="true">清單</param>
+      var ul = $vh.find('ul').first();
+      ul.empty();
+      Enumerable.From(datas).ForEach(function (a1) {
+        ul.append($("<li chineses=" + a1.chineses + " chap=" + a1.chap + ">" + a1.chineses + ":" + a1.chap + "</li>"));
+      })
+    }
+    $(document).delegate("", {
+      vh_init: function (e, p1) {
+        renderList(p1.datas);
+      },
+      vh_itemschanged: function (e, p1) {
+        console.log(p1.datas);
+        renderList(p1.datas);
+      }
+    });
+
+    $vh.delegate('li', {
+      click: function (e) {
+
+        // 傳出第幾個被點 ( 考慮 可5 可8 可5 ... 到底哪個可5被點 ) 0-based
+        var ul = $vh.find('ul').first();
+        var lis = ul.children();
+        for (var i = 0; i < lis.length; i++) {
+          if (lis[i] == this)
+            break;
+        }
+
+        $(this).trigger('liclick', {
+          idx: i,
+          chineses: $(this).attr('chineses'), 
+          chap:parseInt($(this).attr('chap'))
+        });
+
+        // 下面是原本的code 還沒完全被取代掉
+          setBook(ps, $(this).attr('chineses'));
+          ps.chap = parseInt($(this).attr('chap'));
+          ps.sec = 1;
+          //setPageState(ps); // 不要 trigger 出 'go'
+          bookSelect.render(ps, bookSelect.dom);
+          fhlInfo.render(ps, fhlInfo.dom);
+          fhlLecture.render(ps, fhlLecture.dom);
+          // that.render(ps, that.dom); // 已經處理了. vh_itemchanged 會處理
+      }
+    }).delegate('.clearHistory', {
+      click: function (e) {
+        $(this).trigger('clearall');
+      }
+    });
+  }
+  fn.registerEvents = function (ps) {
+    console.log(this.dom);
+    var that = this;
+    $('#viewHistory p')
+        .on('click', function () {
+          var html = $(this).html() == "▼&nbsp;歷史紀錄" ? "&#9654;&nbsp;歷史紀錄" : "&#9660;&nbsp;歷史紀錄";
+          $(this).html(html);
+          if ($(this).html() == "▼&nbsp;歷史紀錄") {
+            var viewHistoryHeight = Math.min(36 * ps.history.length + 64, $('#fhlLeftWindow').height() - $('#settings').height() - 38 - 36);
+            var viewHistoryTop = $('#fhlLeftWindow').height() - viewHistoryHeight - 12;
+            if (viewHistoryHeight == 36 * ps.history.length + 64) {
+              var versionSelectHeight = $("#versionSelect").height() + $("#viewHistory").height() - viewHistoryHeight;
+              $("#versionSelect").animate({ height: versionSelectHeight + 'px' }, { queue: false, duration: 500 });
+            }
+            else {
+              $("#versionSelect").animate({ height: '38px' }, { queue: false, duration: 500 });
+              $("#versionSelect p").html("&#9654;&nbsp;聖經版本選擇");
+            }
+            $("#viewHistory").animate({ height: viewHistoryHeight + 'px', top: viewHistoryTop + 'px' }, { queue: false, duration: 500 });
+            $("#viewHistory p").html("&#9660;&nbsp;歷史紀錄");
+          }
+          else {
+            var versionSelectHeight = $('#fhlLeftWindow').height() - $('#settings').height() - 38 - 36;
+            var viewHistoryTop = $('#fhlLeftWindow').height() - 38 - 12;
+            $("#versionSelect").animate({ height: versionSelectHeight + 'px' }, { queue: false, duration: 500 });
+            $("#versionSelect p").html("&#9660;&nbsp;聖經版本選擇");
+            $("#viewHistory").animate({ height: '38px', top: viewHistoryTop + 'px' }, { queue: false, duration: 500 });
+            $("#viewHistory p").html("&#9654;&nbsp;歷史紀錄");
+          }
+        });
+    //$('.clearHistory').click(function () {
+    //  ps.history = [{ chineses: ps.chineses, chap: ps.chap }];
+    //  setPageState(ps);
+    //  viewHistory.render(ps, viewHistory.dom);
+    //});
+    //this.dom.find('li')
+    //.css({ cursor: "pointer" })
+    //.click(function () {
+    //  setBook(ps, $(this).attr('chineses'));
+    //  ps.chap = parseInt($(this).attr('chap'));
+    //  ps.sec = 1;
+    //  setPageState(ps);
+    //  bookSelect.render(ps, bookSelect.dom);
+    //  fhlInfo.render(ps, fhlInfo.dom);
+    //  fhlLecture.render(ps, fhlLecture.dom);
+    //  that.render(ps, that.dom);
+    //});
+    $('#viewHistoryScrollDiv').scroll(function () {
+      $(this).addClass('scrolling');
+      clearTimeout($.data(this, "scrollCheck"));
+      $.data(this, "scrollCheck", setTimeout(function () {
+        $('#viewHistoryScrollDiv').removeClass('scrolling');
+      }, 350));
+    });
+  }
+  fn.render = function (ps, dom) {
+    /*
+        <div id="viewHistory">
+          <div class="secondLevelInside">
+            <p>&#9654;&nbsp;歷史記錄</p>
+            <span class="clearHistory">清除記錄</span>
+            <div id="viewHistoryScrollDiv">
+              <ul class="viewHistoryList"></ul>
+            </div>
+          </div>
+        </div>
+    */
+    var vh = $("#viewHistory");
+    if (vh.height() == 38)
+      vh.find('p').first().html('&#9654;&nbsp;歷史記錄');
+    else
+      vh.find('p').first().html('&#9660;&nbsp;歷史記錄');
+    //var html="<div class='secondLevelInside'>";
+    //if($("#viewHistory").height()==38)
+    //  html+="<p>&#9654;&nbsp;歷史紀錄</p>";
+    //else
+    //  html+="<p>&#9660;&nbsp;歷史紀錄</p>";
+    //html+="<span class='clearHistory'>清除記錄</span><div id='viewHistoryScrollDiv'><ul class='viewHistoryList'>";
+    //for(var i=ps.history.length-1;i>=0;i--){
+    //  var r=ps.history[i];
+    //  html+="<li chineses="+r.chineses+" chap="+r.chap+">";
+    //  html+=r.chineses+":"+r.chap+"</li>";
+    //}
+    //html+="</ul></div></div>";
+    //dom.html(html);
+
     this.registerEvents(ps);
   }
-};
+  return new ViewHistory();
+})();
+//var viewHistory={
+//  init:function(ps,dom){
+//    this.dom=dom;
+//    this.render(ps,this.dom);
+//    var viewHistoryTop = $('#fhlLeftWindow').height() - 38 - 12;
+//    $('#viewHistory').css({ top: viewHistoryTop });
+
+//    var $vh = $('#viewHistory');
+//    $(document).delegate("", {
+//      vh_init: function (e, p1) {
+//        console.log(p1);
+//      },
+//      vh_itemschanged: function (e, p1) {
+//        console.log(p1);
+//      }
+//    });
+
+//  },
+//  registerEvents:function(ps){
+//    var that=this;
+//    $('#viewHistory p')
+//        .on('click', function(){
+//            var html =  $(this).html() == "▼&nbsp;歷史紀錄"?"&#9654;&nbsp;歷史紀錄":"&#9660;&nbsp;歷史紀錄";
+//            $(this).html(html);
+//            if($(this).html()=="▼&nbsp;歷史紀錄"){
+//                var viewHistoryHeight = Math.min(36*ps.history.length+64, $('#fhlLeftWindow').height() - $('#settings').height() - 38 - 36);
+//                var viewHistoryTop = $('#fhlLeftWindow').height() - viewHistoryHeight -12;
+//                if(viewHistoryHeight == 36*ps.history.length+64){
+//                    var versionSelectHeight = $("#versionSelect").height() + $("#viewHistory").height() - viewHistoryHeight;
+//                    $("#versionSelect").animate( { height: versionSelectHeight + 'px' }, { queue:false, duration:500 });
+//                }
+//                else{
+//                    $("#versionSelect").animate( { height: '38px' }, { queue:false, duration:500 });
+//                    $("#versionSelect p").html("&#9654;&nbsp;聖經版本選擇");
+//                }
+//                $("#viewHistory").animate( { height: viewHistoryHeight + 'px', top:viewHistoryTop + 'px' }, { queue:false, duration:500 });
+//                $("#viewHistory p").html("&#9660;&nbsp;歷史紀錄");
+//            }
+//            else{
+//                var versionSelectHeight = $('#fhlLeftWindow').height() - $('#settings').height() - 38 - 36;
+//                var viewHistoryTop = $('#fhlLeftWindow').height() - 38 - 12;
+//                $("#versionSelect").animate( { height: versionSelectHeight + 'px' }, { queue:false, duration:500 });
+//                $("#versionSelect p").html("&#9660;&nbsp;聖經版本選擇");
+//                $("#viewHistory").animate( { height: '38px', top: viewHistoryTop + 'px' }, { queue:false, duration:500 });
+//                $("#viewHistory p").html("&#9654;&nbsp;歷史紀錄");
+//            }
+//    });
+//    $('.clearHistory').click(function(){
+//      ps.history=[{chineses:ps.chineses,chap:ps.chap}];
+//      setPageState(ps);
+//      viewHistory.render(ps,viewHistory.dom);
+//    });
+//    this.dom.find('li')
+//    .css({cursor: "pointer"})
+//    .click(function(){
+//      setBook(ps,$(this).attr('chineses'));
+//      ps.chap=parseInt($(this).attr('chap'));
+//      ps.sec=1;
+//      setPageState(ps);
+//      bookSelect.render(ps,bookSelect.dom);
+//      fhlInfo.render(ps,fhlInfo.dom);
+//      fhlLecture.render(ps,fhlLecture.dom);
+//      that.render(ps,that.dom);
+//    });
+//    $('#viewHistoryScrollDiv').scroll(function() {
+//        $(this).addClass('scrolling');
+//        clearTimeout( $.data( this, "scrollCheck" ) );
+//        $.data( this, "scrollCheck", setTimeout(function() {
+//            $('#viewHistoryScrollDiv').removeClass('scrolling');
+//        }, 350) );
+//    });
+//  },
+//  render:function(ps,dom){
+//    var html="<div class='secondLevelInside'>";
+//    if($("#viewHistory").height()==38)
+//        html+="<p>&#9654;&nbsp;歷史紀錄</p>";
+//    else
+//        html+="<p>&#9660;&nbsp;歷史紀錄</p>";
+//    html+="<span class='clearHistory'>清除記錄</span><div id='viewHistoryScrollDiv'><ul class='viewHistoryList'>";
+//    for(var i=ps.history.length-1;i>=0;i--){
+//      var r=ps.history[i];
+//      html+="<li chineses="+r.chineses+" chap="+r.chap+">";
+//      html+=r.chineses+":"+r.chap+"</li>";
+//    }
+//    html+="</ul></div></div>";
+//    dom.html(html);
+//    this.registerEvents(ps);
+//  }
+//};
 
 
 /***** End of fhlLeftWindow *****/
@@ -3314,7 +3573,15 @@ var parsingPopUp={
           </div>
         </div>
         <div id="versionSelect"></div>
-        <div id="viewHistory"></div>
+        <div id="viewHistory">
+          <div class="secondLevelInside">
+            <p>&#9654;&nbsp;歷史記錄</p>
+            <span class="clearHistory">清除記錄</span>
+            <div id="viewHistoryScrollDiv">
+              <ul class="viewHistoryList"></ul>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div id="fhlMidWindow">
