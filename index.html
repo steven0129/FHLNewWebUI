@@ -1418,6 +1418,8 @@ $(document).ready(function () {
 
     function trigger_init() {
       $(document).trigger('vh_init', { datas: _datas, idx: _idx });
+      trigger_vh_idxchanged();
+      trigger_vh_itemschanged();
     }
     function trigger_vh_idxchanged() {
       $(document).trigger('vh_idxchanged', { datas: _datas, idx: _idx });
@@ -1425,17 +1427,6 @@ $(document).ready(function () {
     function trigger_vh_itemschanged() {
       $(document).trigger('vh_itemschanged', { datas: _datas, idx: _idx });
     }
-
-    // 等待 ps.history ok 就觸發觸始化
-    (function () {
-      function tryit() {
-        if ( pageState == null || pageState.history == null || pageState.history.length == 0)
-          setTimeout(tryit, 777);//try it again
-        else
-          $(document).trigger('go');
-      }
-      setTimeout(tryit, 777);
-    })();
 
     // callback
     $(viewHistory.dom).delegate('', 'liclick', function (e, p1) {
@@ -1465,13 +1456,56 @@ $(document).ready(function () {
         trigger_vh_itemschanged();
       }
     });
-    $(document).delegate('',{
+    // 當 history 改變的時候, 要儲存 ps
+    $(document).delegate('', {
       vh_itemschanged: function(e,p1){
         pageState.history = p1.datas;
         setBook(pageState, pageState.chineses);
         localStorage.setItem("fhlPageState", JSON.stringify(pageState));
       }
     });
+    // 當 fhlLecture 中的 back click 或 nextclick 被按的時候
+    fhlLecture.when_bclick_or_nclick(function () {
+      if (_idx < _datas.length - 1) {
+        _idx++;
+        trigger_vh_idxchanged();
+
+        // 下面是原本的code 還沒完全被取代掉 (切換章節,卻不送出go event)
+        var ps = pageState;
+        setBook(ps, _datas[_idx].chineses);
+        ps.chap = _datas[_idx].chap;
+        ps.sec = 1;
+        //setPageState(ps); // 不要 trigger 出 'go'
+        bookSelect.render(ps, bookSelect.dom);
+        fhlInfo.render(ps, fhlInfo.dom);
+        fhlLecture.render(ps, fhlLecture.dom);
+      }
+    }, function () {
+      if (_idx > 0) {
+        _idx--;
+        trigger_vh_idxchanged();
+
+        // 下面是原本的code 還沒完全被取代掉 (切換章節,卻不送出go event)
+        var ps = pageState;
+        setBook(ps, _datas[_idx].chineses);
+        ps.chap = _datas[_idx].chap;
+        ps.sec = 1;
+        //setPageState(ps); // 不要 trigger 出 'go'
+        bookSelect.render(ps, bookSelect.dom);
+        fhlInfo.render(ps, fhlInfo.dom);
+        fhlLecture.render(ps, fhlLecture.dom);
+      }
+    });
+    // 等待 ps.history ok 就觸發觸始化
+    (function () {
+      function tryit() {
+        if ( pageState == null || pageState.history == null || pageState.history.length == 0)
+          setTimeout(tryit, 777);//try it again
+        else
+          $(document).trigger('go');
+      }
+      setTimeout(tryit, 777);
+    })();
 
     // 模擬 1
     //_datas.push({ chineses: '創', chap: 1 });
@@ -1522,7 +1556,6 @@ var viewHistory = (function () {
         renderList(p1.datas);
       },
       vh_itemschanged: function (e, p1) {
-        console.log(p1.datas);
         renderList(p1.datas);
       }
     });
@@ -1561,7 +1594,6 @@ var viewHistory = (function () {
     });
   }
   fn.registerEvents = function (ps) {
-    console.log(this.dom);
     var that = this;
     $('#viewHistory p')
         .on('click', function () {
@@ -1891,31 +1923,120 @@ function sortBibleVersion(r,ps){
   }
   return tmpArr;
 }
-
-var fhlLecture={
-  init:function(ps,dom){
-    this.dom=dom;
+var fhlLecture = (function () {
+  function FhlLecture() { };
+  var fn = FhlLecture.prototype;
+  var $lecture ;
+  fn.init = function (ps, dom) {
+    this.dom = dom;
     this.render(ps, dom);
-  },
-  selectLecture:function(book,chap,sec){
-    var that=this.dom;
-    that.find('.lec').removeClass('selected');
-    var obj=that.find('.lec'+'[sec="'+sec+'"]');
-    if(obj){
-      obj.addClass('selected');
-      if(obj.position()){
-          var lecMain = $('#lecMain');
-          if(obj.position().top>lecMain.height() || obj.position().top<0)
-            lecMain.scrollTop(lecMain.scrollTop()+obj.position().top-lecMain.height()/2);
-          else
-            lecMain.scrollTop(lecMain.scrollTop());
-      }
-        else{
-            console.log("no position");
+    $lecture = $(this.dom);
+
+    // chapnext prev 變成1次事件就夠了
+    $('.chapBack').click(function(e){
+      var idx=getBookFunc("index",ps.chineses);
+      if(ps.chap==1){
+        ps.chineses=book[idx-1];
+        ps.engs=bookEng[idx-1];
+        ps.chap=bookChapters[idx-1];
+      }else{
+        if(ps.chap==0){
+          ps.chap=ps.commentBackgroundChap;
+          ps.sec=ps.commentBackgroundSec;
         }
+        ps.chap--;
+      }
+      ps.sec=1;
+      setPageState(ps);
+      viewHistory.render(ps,viewHistory.dom);
+      fhlLecture.render(ps,fhlLecture.dom);
+      fhlInfo.render(ps);
+      bookSelect.render(ps, bookSelect.dom);
+      e.stopPropagation();
+    });
+    $('.chapNext').click(function(e){
+      var idx=getBookFunc("index",ps.chineses);
+      if(ps.chap==bookChapters[idx]){//if last chapter
+        ps.chineses=book[idx+1];//book+1
+        ps.engs=bookEng[idx+1];
+        ps.chap=1;
+      }else{
+        if(ps.chap==0){
+          ps.chap=ps.commentBackgroundChap;
+          ps.sec=ps.commentBackgroundSec;
+        }
+        ps.chap++;
+      }
+      ps.sec=1;
+      setPageState(ps);
+      viewHistory.render(ps,viewHistory.dom);
+      fhlLecture.render(ps,fhlLecture.dom);
+      fhlInfo.render(ps);
+      bookSelect.render(ps, bookSelect.dom);
+      e.stopPropagation();
+    });
+    $('#lecMain').scroll(function () {
+      $(this).addClass('scrolling');
+      clearTimeout($.data(this, "scrollCheck"));
+      $.data(this, "scrollCheck", setTimeout(function () {
+        $('#lecMain').removeClass('scrolling');
+      }, 350));
+    });
+    // 向後巡覽 / 向前巡覽
+    var $vhb = $('#viewHistoryButton');
+    $vhb.delegate('.b', {
+      click: function (e) {
+        $lecture.trigger('bclick');// fhlLecture
+      }
+    }).delegate('.n', {
+      click: function (e) {
+        $lecture.trigger('nclick');// fhlLecture
+      }
+    });
+    (function () {
+      function recolor(e,p1) {
+        if (p1.datas.length -1 == p1.idx)
+          $vhb.find('.b').css('color', 'darkgray');
+        else
+          $vhb.find('.b').css('color', 'black');
+        if (p1.idx == 0)
+          $vhb.find('.n').css('color', 'darkgray');
+        else
+          $vhb.find('.n').css('color', 'black');
+      }
+      $(document).delegate('',
+        {
+          vh_idxchanged: recolor,
+          vh_itemschanged: recolor
+        });
+    })();
+    
+  };
+  fn.when_bclick_or_nclick = function (fnb, fnn) {
+    $lecture.delegate('', {
+      bclick: fnb,
+      nclick: fnn
+    });
+  };
+  fn.selectLecture = function (book, chap, sec) {
+    var that = this.dom;
+    that.find('.lec').removeClass('selected');
+    var obj = that.find('.lec' + '[sec="' + sec + '"]');
+    if (obj) {
+      obj.addClass('selected');
+      if (obj.position()) {
+        var lecMain = $('#lecMain');
+        if (obj.position().top > lecMain.height() || obj.position().top < 0)
+          lecMain.scrollTop(lecMain.scrollTop() + obj.position().top - lecMain.height() / 2);
+        else
+          lecMain.scrollTop(lecMain.scrollTop());
+      }
+      else {
+        console.log("no position");
+      }
     }
-  },
-  reshape: function(ps){
+  };
+  fn.reshape = function (ps) {
     /// <summary> 目前主要是 mode=1 時, align 要重新排過, 會用到的有 fontSize, resize,(在windowAdjust裡呼叫) 裡面會有 show_mode 判斷式, 只要直接呼叫即可 </summary>
     if (ps.show_mode == 1) {
       /// @verbatim 對齊必須在 dom.html(html) 之後才作, 因為那時候才會有實體, 否則取出來的 height() 會是 0@endverbatim
@@ -1937,8 +2058,9 @@ var fhlLecture={
         qvers2.ForEach(function (a1) { if (a1 != null) $(a1).height(maxcy); });
       }
     }
-  },
-  registerEvents:function(ps){
+  };
+
+  fn.registerEvents=function(ps){
     var that = this.dom;
 
     // snow add
@@ -1985,36 +2107,20 @@ var fhlLecture={
       e.stopPropagation();
 
     });
-    /*$('.closeButton').click(function(e){
-      var idx=ps.version.indexOf(versionSelect.dom.find('li[cname='+$(this).attr('cname')+']').attr('book'));
-      ps.version.splice(idx,1);
-      ps.cname.splice(idx,1);
-      versionSelect.dom.find('li[cname='+$(this).attr('cname')+']').removeClass('selected');
-      //Set Default version?
-      if(ps.version.length==0){
-        var o=versionSelect.dom.find('li:eq(0)');
-        ps.version.push(o.attr('book'));
-        ps.cname.push(o.attr('cname'));
-        versionSelect.dom.find('li:eq(0)').addClass('selected');
-      }
-      setPageState(ps);
-      fhlLecture.render(ps,fhlLecture.dom);
-      e.stopPropagation();
-
-    });*/
+    
     if(ps.realTimePopUp==1){
       $('.sn').mouseenter(function(){
         var offset=$(this).offset();
         //console.log(offset.top);
         offset.top+=$(this).height();
         //console.log(offset.top);
-          //console.log('');
+        //console.log('');
         ps.N=$(this).attr('N');
         var k = $(this).html().replace(/&lt;/g,"").replace(/&gt;/g,"");
         k = k.replace(/\(/g,"").replace(/\)/g,"");
         k = k.replace(/\{/g,"").replace(/\}/g,"");
         ps.k=k;
-          setTimeout(function(){ parsingPopUp.render(ps,parsingPopUp.dom,offset) }, 100);
+        setTimeout(function(){ parsingPopUp.render(ps,parsingPopUp.dom,offset) }, 100);
       });
     }else{
       $('.sn').click(function(){
@@ -2029,103 +2135,81 @@ var fhlLecture={
       });
     }
     $('.sn').mouseleave(function(){
-        if(ps.realTimePopUp==1){
-            $.data( $('#parsingPopUp')[0], "parsingPopUpAutoCloseTimeout", setTimeout(function(){
-                if($('#parsingPopUp').css('display')=='block'){
-                    $('#parsingPopUp').hide();
-                }
-            }, 100));
-        }
-    });
-    $('.chapBack').click(function(e){
-      var idx=getBookFunc("index",ps.chineses);
-      if(ps.chap==1){
-        ps.chineses=book[idx-1];
-        ps.engs=bookEng[idx-1];
-        ps.chap=bookChapters[idx-1];
-      }else{
-         if(ps.chap==0){
-              ps.chap=ps.commentBackgroundChap;
-              ps.sec=ps.commentBackgroundSec;
+      if(ps.realTimePopUp==1){
+        $.data( $('#parsingPopUp')[0], "parsingPopUpAutoCloseTimeout", setTimeout(function(){
+          if($('#parsingPopUp').css('display')=='block'){
+            $('#parsingPopUp').hide();
           }
-          ps.chap--;
+        }, 100));
       }
-      ps.sec=1;
-      setPageState(ps);
-      viewHistory.render(ps,viewHistory.dom);
-      fhlLecture.render(ps,fhlLecture.dom);
-      fhlInfo.render(ps);
-      bookSelect.render(ps, bookSelect.dom);
-      e.stopPropagation();
     });
-    $('.chapNext').click(function(e){
-      var idx=getBookFunc("index",ps.chineses);
-      if(ps.chap==bookChapters[idx]){//if last chapter
-        ps.chineses=book[idx+1];//book+1
-        ps.engs=bookEng[idx+1];
-        ps.chap=1;
-      }else{
-          if(ps.chap==0){
-              ps.chap=ps.commentBackgroundChap;
-              ps.sec=ps.commentBackgroundSec;
-          }
-        ps.chap++;
-      }
-      ps.sec=1;
-      setPageState(ps);
-      viewHistory.render(ps,viewHistory.dom);
-      fhlLecture.render(ps,fhlLecture.dom);
-      fhlInfo.render(ps);
-      bookSelect.render(ps, bookSelect.dom);
-      e.stopPropagation();
-    });
-    $('#lecMain').scroll(function() {
-        $(this).addClass('scrolling');
-        clearTimeout( $.data( this, "scrollCheck" ) );
-        $.data( this, "scrollCheck", setTimeout(function() {
-            $('#lecMain').removeClass('scrolling');
-        }, 350) );
-    });
-  },
-  render:function(ps,dom){
+
+    //下面3個已經拉到 init , 只需1次
+    //$('.chapBack').click(function(e){});
+    //$('.chapNext').click(function(e){});
+    //$('#lecMain').scroll(function () { });
+  };
+  fn.render = function (ps, dom) {
     //console.log('start of fhlLecture render');
-      function reverse(s) {
-  var o = '';
-  for (var i = s.length - 1; i >= 0; i--)
-    o += s[i];
-  return o;
-}      
-    var that=this;
-    var htmlTitle="";
-    var htmlContent="";
-    var col=ps.version.length;
-    var rspArr=new Array();
-    var idx=0;
-    getBibleText(col,ps,function(o){
-        rspArr.push(o);
-    },function(){
-      var isOld=checkOldNew(ps);
-      var maxRecordCnt=0;
-      var maxRecordIdx=0;
-      rspArr=sortBibleVersion(rspArr,ps);
-      for(var i=0;i<rspArr.length;i++){
-        var o=rspArr[i];
-        if(o.v_name==="原文直譯(參考用)")
-            htmlTitle+="<div class=lecContent><div class=versionName>"+o.v_name+"<span class='closeButton' cname='"+"原文直譯"+"'>&#215</span></div></div>";
+    function reverse(s) {
+      var o = '';
+      for (var i = s.length - 1; i >= 0; i--)
+        o += s[i];
+      return o;
+    }
+    var $lec = $(this.dom);
+    var that = this;
+    var htmlTitle = "";
+    var htmlContent = "";
+    var col = ps.version.length;
+    var rspArr = new Array();
+    var idx = 0;
+    getBibleText(col, ps, function (o) {
+      rspArr.push(o);
+    }, function () {
+      var isOld = checkOldNew(ps);
+      var maxRecordCnt = 0;
+      var maxRecordIdx = 0;
+      rspArr = sortBibleVersion(rspArr, ps);
+
+
+
+      // nextchap prevchap
+      var bookName = getBookFunc("bookFullName", ps.chineses);
+      if (bookName != "failed") {
+        if (ps.chineses == book[0] && ps.chap == 1) {
+          $lec.find('.chapBack').first().css('display', 'none');
+        } else {
+          $lec.find('.chapBack').first().css('display', 'block');
+        }
+        if (ps.chineses == book[65] && ps.chap == 22) {
+          $lec.find('.chapNext').first().css('display', 'none');
+        } else {
+          $lec.find('.chapNext').first().css('display', 'block');
+        }
+      }
+
+      // title 
+      var dtitle = $('#lecMainTitle');
+      dtitle.empty();
+
+      for (var i = 0; i < rspArr.length; i++) {
+        var o = rspArr[i];
+        if (o.v_name === "原文直譯(參考用)")
+          dtitle.append($("<div class=lecContent><div class=versionName>" + o.v_name + "<span class='closeButton' cname='" + "原文直譯" + "'>&#215</span></div></div>"));
         else
-            htmlTitle+="<div class=lecContent><div class=versionName>"+o.v_name+"<span class='closeButton' cname='"+o.v_name+"'>&#215</span></div></div>";
-        
-        if(rspArr[i].record_count>maxRecordCnt){
-          maxRecordCnt=rspArr[i].record_count;
-          maxRecordIdx=i;
+          dtitle.append($("<div class=lecContent><div class=versionName>" + o.v_name + "<span class='closeButton' cname='" + o.v_name + "'>&#215</span></div></div>"));
+
+        if (rspArr[i].record_count > maxRecordCnt) {
+          maxRecordCnt = rspArr[i].record_count;
+          maxRecordIdx = i;
           //console.log("maxRecordCnt:"+maxRecordCnt+",maxRecordIdx:"+maxRecordIdx);
         }
       }
 
       //var mode = 1;// 原本的. 就切回0
       var mode = ps.show_mode;
-      switch(mode)
-      {
+      switch (mode) {
         case 0:
           {
             // 每一節 i, 以最大的那個版本為主 maxR 
@@ -2165,9 +2249,9 @@ var fhlLecture={
           {
             // 注意, 這個變數, 只是暫存的, 它輽出的結果是 html 文字, 不包含自己, 所以lecMain屬性是在另種設定, 不是在這
             // 不要再從這裡改 <div style=padding:10px 50px></div>, 不會有效果的.
-            var $htmlContent= $("<div id='lecMain'></div>");
+            var $htmlContent = $("<div id='lecMain'></div>");
 
-            var cx1 = 100 / rspArr.length ;
+            var cx1 = 100 / rspArr.length;
             for (j = 0; j < rspArr.length; j++) {
               // 分3欄
               var onever = $("<div class='vercol' style='width:" + cx1 + "%;display:inline-block;vertical-align:top;font-size: " + ps.fontSize + "pt; line-height: " + ps.fontSize * 1.25 + "pt; margin-top: " + (ps.fontSize * 1.25 - 15) + "px'></div>");
@@ -2181,7 +2265,7 @@ var fhlLecture={
                 var chap = maxR.chap, sec = maxR.sec;
                 var rec = rspArr[j].record[i]; //原 var rec = getRecord(rspArr[j].record, null, chap, sec);
                 var bibleText = "";
-                if (rec != null) 
+                if (rec != null)
                   bibleText = parseBibleText(rec.bible_text, ps, isOld, rspArr[j].v_name);
                 else
                   bibleText = "";
@@ -2204,12 +2288,12 @@ var fhlLecture={
                 //$("<div>" + sec + " " + bibleText + "</div>"));
 
                 $htmlContent.children().eq(j).append(
-                $("<div chap="+chap+" sec=" +sec+ " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + bibleText + "</span></div></div>"));
-                
+                $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + bibleText + "</span></div></div>"));
+
               }//for each verse
             }//for each version
             htmlContent = $htmlContent.html();//.html()不包含自己 ... 所以這裡不是設 lecMain 有用的地方
-            
+
           }
           break;
         case 2:
@@ -2220,7 +2304,7 @@ var fhlLecture={
 
             var onever = $("<div class='vercol' style='vertical-align:top;font-size: " + ps.fontSize + "pt; line-height: " + ps.fontSize * 1.25 + "pt; margin-top: " + (ps.fontSize * 1.25 - 15) + "px'></div>");
             $htmlContent.append(onever);
-            
+
             // 每一節內容
             for (var i = 0; i < maxRecordCnt; i++) {
               var maxR = rspArr[maxRecordIdx].record[i]; //原 var maxR = rspArr[maxRecordIdx].record[i];
@@ -2228,17 +2312,15 @@ var fhlLecture={
 
               for (var j = 0; j < rspArr.length; j++) {
                 var r1 = rspArr[j];
-                var vname =  " ("+r1.v_name+") "; //新譯本 合和本 etc
+                var vname = " (" + r1.v_name + ") "; //新譯本 合和本 etc
 
-                if (i >= r1.record_count)
-                {
+                if (i >= r1.record_count) {
                   //此版本 本章節比較少, 
                   onever.append(
                 $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + vname + "</span></div></div>"));
                 }
-                else
-                {
-                  
+                else {
+
                   var rec = rspArr[j].record[i]; //原 var rec = getRecord(rspArr[j].record, null, chap, sec);
                   var bibleText = "";
                   if (rec != null)
@@ -2261,10 +2343,10 @@ var fhlLecture={
                   }
 
                   onever.append(
-                  $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + bibleText + vname +  "</span></div></div>"));
+                  $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + bibleText + vname + "</span></div></div>"));
 
                 }
-                
+
               }
             }
 
@@ -2273,53 +2355,466 @@ var fhlLecture={
           } break;
       }
 
-      var control_str="";
-      var bookName=getBookFunc("bookFullName",ps.chineses);
-      if(bookName!="failed"){
-        if(ps.chineses==book[0]&&ps.chap==1){
-          control_str+="";
-        }else{
-          control_str+="<div class='chapBack chapControl'><span>&#x276e;</span></div>";
-        }
-        /*control_str+="<span class='chapSelect'>"+bookName;
-        control_str+="&nbsp&nbsp"+ps.chap+"</span>";*/
-        if(ps.chineses==book[65]&&ps.chap==22){
-          control_str+="";
-        }else{
-          control_str+="<div class='chapNext chapControl'><span>&#x276f;</span></div>";
-        }
-      }
-
-      var html = control_str + '<div id="lecMainTitle">' + htmlTitle + '</div>';
-        html += '<div id="lecMain" mode='+mode+'  style="padding:10px 50px">' + htmlContent + '</div>';
-      dom.html(html);
-
+      $lec.find('#lecMain').first()
+        .html(htmlContent)
+        .attr('mode', mode);
+      
       fhlLecture.reshape(ps);
 
       // 2016.01.21(四) 版權宣告 snow 
       {
         var div_copyrigh = $('<div id="div_copyright" class="lec copyright"></div>');
         $('#lecMain').append(div_copyrigh); // 放在 lecMain 才會在最下面. 因為 parent 有設 position 屬性
-        rr = React.createElement(copyright_api.R.frame, {ver:ps.version});
+        rr = React.createElement(copyright_api.R.frame, { ver: ps.version });
         ss = React.render(rr, document.getElementById("div_copyright"));  // snow add 2016.01.21(四), 
         // bug 小心: 版權宣告 render 必須在 dom.html 之後唷, 這樣才找到的 divCopyright 實體
       }
 
-      if ( mode == 0 ){
-        for(var i=0;i<maxRecordCnt;i++){
-          var r=rspArr[maxRecordIdx].record[i];
-          dom.find('.lec:eq('+i+')').attr('chap',r.chap);
-          dom.find('.lec:eq('+i+')').attr('sec',r.sec);
+      if (mode == 0) {
+        for (var i = 0; i < maxRecordCnt; i++) {
+          var r = rspArr[maxRecordIdx].record[i];
+          dom.find('.lec:eq(' + i + ')').attr('chap', r.chap);
+          dom.find('.lec:eq(' + i + ')').attr('sec', r.sec);
         }
       }
-      setCSS(col,ps);
+      setCSS(col, ps);
       setFont();
-      that.selectLecture(null,null,ps.sec);
+      that.selectLecture(null, null, ps.sec);
       that.registerEvents(ps);
-      //console.log('End of fhlLecture render');
     });
-  }
-};
+  };
+
+  return new FhlLecture();
+})();
+  
+//var fhlLecture={
+//  init:function(ps,dom){
+//    this.dom=dom;
+//    this.render(ps, dom);
+//  },
+//  selectLecture:function(book,chap,sec){
+//    var that=this.dom;
+//    that.find('.lec').removeClass('selected');
+//    var obj=that.find('.lec'+'[sec="'+sec+'"]');
+//    if(obj){
+//      obj.addClass('selected');
+//      if(obj.position()){
+//          var lecMain = $('#lecMain');
+//          if(obj.position().top>lecMain.height() || obj.position().top<0)
+//            lecMain.scrollTop(lecMain.scrollTop()+obj.position().top-lecMain.height()/2);
+//          else
+//            lecMain.scrollTop(lecMain.scrollTop());
+//      }
+//        else{
+//            console.log("no position");
+//        }
+//    }
+//  },
+//  reshape: function(ps){
+//    /// <summary> 目前主要是 mode=1 時, align 要重新排過, 會用到的有 fontSize, resize,(在windowAdjust裡呼叫) 裡面會有 show_mode 判斷式, 只要直接呼叫即可 </summary>
+//    if (ps.show_mode == 1) {
+//      /// @verbatim 對齊必須在 dom.html(html) 之後才作, 因為那時候才會有實體, 否則取出來的 height() 會是 0@endverbatim
+//      var $lecMain = $('#lecMain');
+//      var cols = $lecMain.children();
+//      var qcols = Enumerable.From(cols);
+//      var qvers = qcols.Select(function (a1) { return $(a1).children(); });
+//      // console.log(qvers.ToArray());
+//      var maxRecordCnt = qvers.Max('$.length');
+//      //console.log(maxRecordCnt);
+
+//      for (var i = 0; i < maxRecordCnt; i++) {
+//        var qvers2 =
+//        qvers.Select(function (a1) { if (a1[i] == null) return null; return a1[i] });
+//        qvers2.ForEach(function (a1) { if (a1 != null) $(a1).height('100%'); }); //要先變為auto, 才能正確算 最大的 cy
+//        var maxcy = qvers2.Max(function (a1) { return a1 == null ? 0 : $(a1).height() });
+//        //var maxcy = Math.max.apply(Math, qvers2.Select(function (a1) { return $(a1).height(); }).ToArray());
+//        //console.log(maxcy);
+//        qvers2.ForEach(function (a1) { if (a1 != null) $(a1).height(maxcy); });
+//      }
+//    }
+//  },
+//  registerEvents:function(ps){
+//    var that = this.dom;
+
+//    // snow add
+//    var $lecMain = $('#lecMain');
+//    var mode = $lecMain.attr('mode'); //0: 原本, 1:好選擇    
+
+//    that.find('.lec').click(function(){
+//      if ($(this).hasClass('copyright')) //版本宣告,應該不能click snow add 2016.01.22(五)
+//        return;
+//      ps.sec = parseInt($(this).attr('sec'));
+//      ps.chap = parseInt($(this).attr('chap'));
+
+//      if (mode == 0)
+//      {
+//        $(that).find('.lec').removeClass('selected');
+//        $(this).addClass('selected');
+//      }
+//      else if (mode == 1 || mode == 2)
+//      {
+//        var vers = $lecMain.find(".vercol");
+//        vers.children().removeClass('selected');//這個要將前一次的selected去掉.不然會累積一堆
+//        var verses = vers.find('[sec=' + ps.sec + ']');
+//        verses.addClass('selected');
+//      }
+
+//      setPageState(ps);
+//      fhlInfo.render(ps);
+//    });
+
+//    $('.versionName').click(function(e){
+//      var idx=ps.version.indexOf(versionSelect.dom.find('li[cname='+$(this).children('.closeButton').attr('cname')+']').attr('book'));
+//      ps.version.splice(idx,1);
+//      ps.cname.splice(idx,1);
+//      versionSelect.dom.find('li[cname='+$(this).children('.closeButton').attr('cname')+']').removeClass('selected');
+//      //Set Default version?
+//      if(ps.version.length==0){
+//        var o=versionSelect.dom.find('li:eq(0)');
+//        ps.version.push(o.attr('book'));
+//        ps.cname.push(o.attr('cname'));
+//        versionSelect.dom.find('li:eq(0)').addClass('selected');
+//      }
+//      setPageState(ps);
+//      fhlLecture.render(ps,fhlLecture.dom);
+//      e.stopPropagation();
+
+//    });
+//    /*$('.closeButton').click(function(e){
+//      var idx=ps.version.indexOf(versionSelect.dom.find('li[cname='+$(this).attr('cname')+']').attr('book'));
+//      ps.version.splice(idx,1);
+//      ps.cname.splice(idx,1);
+//      versionSelect.dom.find('li[cname='+$(this).attr('cname')+']').removeClass('selected');
+//      //Set Default version?
+//      if(ps.version.length==0){
+//        var o=versionSelect.dom.find('li:eq(0)');
+//        ps.version.push(o.attr('book'));
+//        ps.cname.push(o.attr('cname'));
+//        versionSelect.dom.find('li:eq(0)').addClass('selected');
+//      }
+//      setPageState(ps);
+//      fhlLecture.render(ps,fhlLecture.dom);
+//      e.stopPropagation();
+
+//    });*/
+//    if(ps.realTimePopUp==1){
+//      $('.sn').mouseenter(function(){
+//        var offset=$(this).offset();
+//        //console.log(offset.top);
+//        offset.top+=$(this).height();
+//        //console.log(offset.top);
+//          //console.log('');
+//        ps.N=$(this).attr('N');
+//        var k = $(this).html().replace(/&lt;/g,"").replace(/&gt;/g,"");
+//        k = k.replace(/\(/g,"").replace(/\)/g,"");
+//        k = k.replace(/\{/g,"").replace(/\}/g,"");
+//        ps.k=k;
+//          setTimeout(function(){ parsingPopUp.render(ps,parsingPopUp.dom,offset) }, 100);
+//      });
+//    }else{
+//      $('.sn').click(function(){
+//        var offset=$(this).offset();
+//        offset.top+=$(this).height();
+//        ps.N=$(this).attr('N');
+//        var k = $(this).html().replace(/&lt;/g,"").replace(/&gt;/g,"");
+//        k = k.replace(/\(/g,"").replace(/\)/g,"");
+//        k = k.replace(/\{/g,"").replace(/\}/g,"");
+//        ps.k=k;
+//        parsingPopUp.render(ps,parsingPopUp.dom,offset);
+//      });
+//    }
+//    $('.sn').mouseleave(function(){
+//        if(ps.realTimePopUp==1){
+//            $.data( $('#parsingPopUp')[0], "parsingPopUpAutoCloseTimeout", setTimeout(function(){
+//                if($('#parsingPopUp').css('display')=='block'){
+//                    $('#parsingPopUp').hide();
+//                }
+//            }, 100));
+//        }
+//    });
+//    $('.chapBack').click(function(e){
+//      var idx=getBookFunc("index",ps.chineses);
+//      if(ps.chap==1){
+//        ps.chineses=book[idx-1];
+//        ps.engs=bookEng[idx-1];
+//        ps.chap=bookChapters[idx-1];
+//      }else{
+//         if(ps.chap==0){
+//              ps.chap=ps.commentBackgroundChap;
+//              ps.sec=ps.commentBackgroundSec;
+//          }
+//          ps.chap--;
+//      }
+//      ps.sec=1;
+//      setPageState(ps);
+//      viewHistory.render(ps,viewHistory.dom);
+//      fhlLecture.render(ps,fhlLecture.dom);
+//      fhlInfo.render(ps);
+//      bookSelect.render(ps, bookSelect.dom);
+//      e.stopPropagation();
+//    });
+//    $('.chapNext').click(function(e){
+//      var idx=getBookFunc("index",ps.chineses);
+//      if(ps.chap==bookChapters[idx]){//if last chapter
+//        ps.chineses=book[idx+1];//book+1
+//        ps.engs=bookEng[idx+1];
+//        ps.chap=1;
+//      }else{
+//          if(ps.chap==0){
+//              ps.chap=ps.commentBackgroundChap;
+//              ps.sec=ps.commentBackgroundSec;
+//          }
+//        ps.chap++;
+//      }
+//      ps.sec=1;
+//      setPageState(ps);
+//      viewHistory.render(ps,viewHistory.dom);
+//      fhlLecture.render(ps,fhlLecture.dom);
+//      fhlInfo.render(ps);
+//      bookSelect.render(ps, bookSelect.dom);
+//      e.stopPropagation();
+//    });
+//    $('#lecMain').scroll(function() {
+//        $(this).addClass('scrolling');
+//        clearTimeout( $.data( this, "scrollCheck" ) );
+//        $.data( this, "scrollCheck", setTimeout(function() {
+//            $('#lecMain').removeClass('scrolling');
+//        }, 350) );
+//    });
+//  },
+//  render:function(ps,dom){
+//    //console.log('start of fhlLecture render');
+//      function reverse(s) {
+//  var o = '';
+//  for (var i = s.length - 1; i >= 0; i--)
+//    o += s[i];
+//  return o;
+//}      
+//    var that=this;
+//    var htmlTitle="";
+//    var htmlContent="";
+//    var col=ps.version.length;
+//    var rspArr=new Array();
+//    var idx=0;
+//    getBibleText(col,ps,function(o){
+//        rspArr.push(o);
+//    },function(){
+//      var isOld=checkOldNew(ps);
+//      var maxRecordCnt=0;
+//      var maxRecordIdx=0;
+//      rspArr=sortBibleVersion(rspArr,ps);
+//      for(var i=0;i<rspArr.length;i++){
+//        var o=rspArr[i];
+//        if(o.v_name==="原文直譯(參考用)")
+//            htmlTitle+="<div class=lecContent><div class=versionName>"+o.v_name+"<span class='closeButton' cname='"+"原文直譯"+"'>&#215</span></div></div>";
+//        else
+//            htmlTitle+="<div class=lecContent><div class=versionName>"+o.v_name+"<span class='closeButton' cname='"+o.v_name+"'>&#215</span></div></div>";
+        
+//        if(rspArr[i].record_count>maxRecordCnt){
+//          maxRecordCnt=rspArr[i].record_count;
+//          maxRecordIdx=i;
+//          //console.log("maxRecordCnt:"+maxRecordCnt+",maxRecordIdx:"+maxRecordIdx);
+//        }
+//      }
+
+//      //var mode = 1;// 原本的. 就切回0
+//      var mode = ps.show_mode;
+//      switch(mode)
+//      {
+//        case 0:
+//          {
+//            // 每一節 i, 以最大的那個版本為主 maxR 
+//            for (var i = 0; i < maxRecordCnt; i++) {
+//              var maxR = rspArr[maxRecordIdx].record[i];
+//              htmlContent += "<div class=lec style='font-size: " + ps.fontSize + "pt; line-height: " + ps.fontSize * 1.25 + "pt; margin-top: " + (ps.fontSize * 1.25 - 15) + "px'>";
+//              //htmlContent+="<div class=lecTitle>"+maxR.chap+":"+maxR.sec+"</div>";
+//              for (j = 0; j < rspArr.length; j++) {
+//                var chap = maxR.chap, sec = maxR.sec;
+//                var rec = getRecord(rspArr[j].record, null, chap, sec);
+//                //var r=rspArr[j].record[i];
+//                if (rec != null) {
+//                  var bibleText = parseBibleText(rec.bible_text, ps, isOld, rspArr[j].v_name);
+//                  if (bibleText == "a")
+//                    bibleText = "【併入上節】";
+//                } else {
+//                  bibleText = "";
+//                }
+//                if (rspArr[j].version == "bhs") {
+//                  var bibleText = bibleText.split(/\n/g).reverse().join("<br>");
+//                  //console.log(bibleText);
+//                }
+//                else if (rspArr[j].version == "cbol") {
+//                  var bibleText = bibleText.split(/\n/g).join("<br>");
+//                  //console.log(bibleText);
+//                }
+//                else if (rspArr[j].version == "nwh") {
+//                  var bibleText = bibleText.split(/\n/g).join("<br>");
+//                }
+//                htmlContent += "<div class='lecContent " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + maxR.sec + "</span><span class='verseContent'>" + bibleText + "</span></div></div>";
+//              }
+//              htmlContent += "</div>";
+//            }
+//          }
+//          break;
+//        case 1:
+//          {
+//            // 注意, 這個變數, 只是暫存的, 它輽出的結果是 html 文字, 不包含自己, 所以lecMain屬性是在另種設定, 不是在這
+//            // 不要再從這裡改 <div style=padding:10px 50px></div>, 不會有效果的.
+//            var $htmlContent= $("<div id='lecMain'></div>");
+
+//            var cx1 = 100 / rspArr.length ;
+//            for (j = 0; j < rspArr.length; j++) {
+//              // 分3欄
+//              var onever = $("<div class='vercol' style='width:" + cx1 + "%;display:inline-block;vertical-align:top;font-size: " + ps.fontSize + "pt; line-height: " + ps.fontSize * 1.25 + "pt; margin-top: " + (ps.fontSize * 1.25 - 15) + "px'></div>");
+//              $htmlContent.append(onever);
+//            }
+
+//            // 每1欄內容
+//            for (j = 0; j < rspArr.length; j++) { //each version
+//              for (var i = 0; i < rspArr[j].record_count; i++) {//each sec
+//                var maxR = rspArr[j].record[i]; //原 var maxR = rspArr[maxRecordIdx].record[i];
+//                var chap = maxR.chap, sec = maxR.sec;
+//                var rec = rspArr[j].record[i]; //原 var rec = getRecord(rspArr[j].record, null, chap, sec);
+//                var bibleText = "";
+//                if (rec != null) 
+//                  bibleText = parseBibleText(rec.bible_text, ps, isOld, rspArr[j].v_name);
+//                else
+//                  bibleText = "";
+//                if (bibleText == "a") {
+//                  bibleText = "【併入上節】";
+//                }
+//                if (rspArr[j].version == "bhs") {
+//                  bibleText = bibleText.split(/\n/g).reverse().join("<br>");
+//                  //console.log(bibleText);
+//                }
+//                else if (rspArr[j].version == "cbol") {
+//                  bibleText = bibleText.split(/\n/g).join("<br>");
+//                  //console.log(bibleText);
+//                }
+//                else if (rspArr[j].version == "nwh") {
+//                  bibleText = bibleText.split(/\n/g).join("<br>");
+//                }
+
+//                //$htmlContent.children().eq(j).append(
+//                //$("<div>" + sec + " " + bibleText + "</div>"));
+
+//                $htmlContent.children().eq(j).append(
+//                $("<div chap="+chap+" sec=" +sec+ " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + bibleText + "</span></div></div>"));
+                
+//              }//for each verse
+//            }//for each version
+//            htmlContent = $htmlContent.html();//.html()不包含自己 ... 所以這裡不是設 lecMain 有用的地方
+            
+//          }
+//          break;
+//        case 2:
+//          {
+//            // 注意, 這個變數, 只是暫存的, 它輽出的結果是 html 文字, 不包含自己, 所以lecMain屬性是在另種設定, 不是在這
+//            // 不要再從這裡改 <div style=padding:10px 50px></div>, 不會有效果的.
+//            var $htmlContent = $("<div id='lecMain'></div>");
+
+//            var onever = $("<div class='vercol' style='vertical-align:top;font-size: " + ps.fontSize + "pt; line-height: " + ps.fontSize * 1.25 + "pt; margin-top: " + (ps.fontSize * 1.25 - 15) + "px'></div>");
+//            $htmlContent.append(onever);
+            
+//            // 每一節內容
+//            for (var i = 0; i < maxRecordCnt; i++) {
+//              var maxR = rspArr[maxRecordIdx].record[i]; //原 var maxR = rspArr[maxRecordIdx].record[i];
+//              var chap = maxR.chap, sec = maxR.sec;
+
+//              for (var j = 0; j < rspArr.length; j++) {
+//                var r1 = rspArr[j];
+//                var vname =  " ("+r1.v_name+") "; //新譯本 合和本 etc
+
+//                if (i >= r1.record_count)
+//                {
+//                  //此版本 本章節比較少, 
+//                  onever.append(
+//                $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + vname + "</span></div></div>"));
+//                }
+//                else
+//                {
+                  
+//                  var rec = rspArr[j].record[i]; //原 var rec = getRecord(rspArr[j].record, null, chap, sec);
+//                  var bibleText = "";
+//                  if (rec != null)
+//                    bibleText = parseBibleText(rec.bible_text, ps, isOld, rspArr[j].v_name);
+//                  else
+//                    bibleText = "";
+//                  if (bibleText == "a") {
+//                    bibleText = "【併入上節】";
+//                  }
+//                  if (rspArr[j].version == "bhs") {
+//                    bibleText = bibleText.split(/\n/g).reverse().join("<br>");
+//                    //console.log(bibleText);
+//                  }
+//                  else if (rspArr[j].version == "cbol") {
+//                    bibleText = bibleText.split(/\n/g).join("<br>");
+//                    //console.log(bibleText);
+//                  }
+//                  else if (rspArr[j].version == "nwh") {
+//                    bibleText = bibleText.split(/\n/g).join("<br>");
+//                  }
+
+//                  onever.append(
+//                  $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + bibleText + vname +  "</span></div></div>"));
+
+//                }
+                
+//              }
+//            }
+
+//            htmlContent = $htmlContent.html();//.html()不包含自己 ... 所以這裡不是設 lecMain 有用的地方
+
+//          } break;
+//      }
+
+//      var control_str="";
+//      var bookName=getBookFunc("bookFullName",ps.chineses);
+//      if(bookName!="failed"){
+//        if(ps.chineses==book[0]&&ps.chap==1){
+//          control_str+="";
+//        }else{
+//          control_str+="<div class='chapBack chapControl'><span>&#x276e;</span></div>";
+//        }
+//        /*control_str+="<span class='chapSelect'>"+bookName;
+//        control_str+="&nbsp&nbsp"+ps.chap+"</span>";*/
+//        if(ps.chineses==book[65]&&ps.chap==22){
+//          control_str+="";
+//        }else{
+//          control_str+="<div class='chapNext chapControl'><span>&#x276f;</span></div>";
+//        }
+//      }
+
+//      var html = control_str + '<div id="lecMainTitle">' + htmlTitle + '</div>';
+//        html += '<div id="lecMain" mode='+mode+'  style="padding:10px 50px">' + htmlContent + '</div>';
+//      dom.html(html);
+
+//      fhlLecture.reshape(ps);
+
+//      // 2016.01.21(四) 版權宣告 snow 
+//      {
+//        var div_copyrigh = $('<div id="div_copyright" class="lec copyright"></div>');
+//        $('#lecMain').append(div_copyrigh); // 放在 lecMain 才會在最下面. 因為 parent 有設 position 屬性
+//        rr = React.createElement(copyright_api.R.frame, {ver:ps.version});
+//        ss = React.render(rr, document.getElementById("div_copyright"));  // snow add 2016.01.21(四), 
+//        // bug 小心: 版權宣告 render 必須在 dom.html 之後唷, 這樣才找到的 divCopyright 實體
+//      }
+
+//      if ( mode == 0 ){
+//        for(var i=0;i<maxRecordCnt;i++){
+//          var r=rspArr[maxRecordIdx].record[i];
+//          dom.find('.lec:eq('+i+')').attr('chap',r.chap);
+//          dom.find('.lec:eq('+i+')').attr('sec',r.sec);
+//        }
+//      }
+//      setCSS(col,ps);
+//      setFont();
+//      that.selectLecture(null,null,ps.sec);
+//      that.registerEvents(ps);
+//      //console.log('End of fhlLecture render');
+//    });
+//  }
+//};
 
 var fhlMidBottomWindow={
   init:function(ps,dom){
@@ -3585,7 +4080,15 @@ var parsingPopUp={
       </div>
     </div>
     <div id="fhlMidWindow">
-      <div id="fhlLecture"></div>
+      <div id="fhlLecture">
+        <div class="chapBack chapControl"><span>&#x276e;</span></div>
+        <div class="chapNext chapControl"><span>&#x276f;</span></div>
+        <span id="viewHistoryButton" style="position:absolute;right:10px;cursor:pointer;font-size:28px;font-weight:800"><span class="b noselect">←</span><span class="n noselect">→</span></span>
+        <div id="lecMainTitle"></div>
+        <!-- 會動態變更, 依版本選擇數量 -->
+        <div id="lecMain" style="padding:10px 50px"></div>
+        <!-- lecMain 下會動態變更, 依 mode 與 版本切換 -->
+      </div>
       <div id="fhlMidBottomWindow">
         <div id="fhlMidBottomWindowTitle"></div>
         <div id="fhlMidBottomWindowContent">
