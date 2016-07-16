@@ -2275,7 +2275,10 @@ var fhlLecture = (function () {
 
               for (var j = 0; j < rspArr.length; j++) {
                 var r1 = rspArr[j];
-                var vname = " (" + r1.v_name + ") "; //新譯本 合和本 etc
+                if ( rspArr.length > 1)
+                  var vname = " (" + r1.v_name + ") "; //新譯本 合和本 etc
+                else
+                  var vname = ""; //只有一種版本就不要加了
 
                 if (i >= r1.record_count) {
                   //此版本 本章節比較少, 
