@@ -1,0 +1,22 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+	<meta charset="utf-8" />
+  <script src="libs/jquery-1.11.3.js"></script>
+  <script src="search_api/fhl_api.js"></script>
+</head>
+<body>
+  <script>
+    // http://bkbible.fhl.net/json/rt.php?engs=Gen&chap=2&version=tcv&gb=0
+    fhl.json_api_text_post("rt.php", "engs=Gen&chap=3&version=tcv&id=3", function (a1, a2) {
+      var j1 = JSON.parse(a1);
+      console.log(j1);
+    }, function (a1, a2) { }, null);
+
+    /【(\d)】/.re
+  </script>
+  <div id="re1"></div>
+</body>
+</html>

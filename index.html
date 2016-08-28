@@ -2235,6 +2235,7 @@ var fhlLecture = (function () {
                 if (bibleText == "a") {
                   bibleText = "【併入上節】";
                 }
+
                 if (rspArr[j].version == "bhs") {
                   bibleText = bibleText.split(/\n/g).reverse().join("<br>");
                   //console.log(bibleText);
@@ -2251,7 +2252,7 @@ var fhlLecture = (function () {
                 //$("<div>" + sec + " " + bibleText + "</div>"));
 
                 $htmlContent.children().eq(j).append(
-                $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + bibleText + "</span></div></div>"));
+                $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span class='verseContent'>" + bibleText + "</span></div></div>"));
 
               }//for each verse
             }//for each version
@@ -2283,7 +2284,7 @@ var fhlLecture = (function () {
                 if (i >= r1.record_count) {
                   //此版本 本章節比較少, 
                   onever.append(
-                $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + vname + "</span></div></div>"));
+                $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span class='verseContent'>" + vname + "</span></div></div>"));
                 }
                 else {
 
@@ -2309,7 +2310,7 @@ var fhlLecture = (function () {
                   }
 
                   onever.append(
-                  $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span )class='verseContent'>" + bibleText + vname + "</span></div></div>"));
+                  $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span class='verseContent'>" + bibleText + vname + "</span></div></div>"));
 
                 }
 
@@ -2321,9 +2322,12 @@ var fhlLecture = (function () {
           } break;
       }
 
+
       $lec.find('#lecMain').first()
         .html(htmlContent)
         .attr('mode', mode);
+
+
       
       fhlLecture.reshape(ps);
 
@@ -2346,7 +2350,24 @@ var fhlLecture = (function () {
       setCSS(col, ps);
       setFont();
       that.selectLecture(null, null, ps.sec);
+
+      {
+        $lec.find('.verseContent').each(function (a1, a2) {
+          console.log(a2.innerHTML);
+          var aa2 = a2.innerHTML.match(/【(\d)】/);
+          if (aa2 != null)// null,表示沒有注解 【42】
+          {
+            //var idref = parseInt(aa2[1]);//[1]會等於42
+            a2.innerHTML = a2.innerHTML.replace(/【(\d)】/, "<span class=ft ft=" + aa2[1] + ">【" + aa2[1] + "】</span>");
+            //a2.innerHTML.replace(/【(\d)】/, "<span class=ft>【】</span>");
+          }
+
+        });
+      }
+
       that.registerEvents(ps);
+
+      
     });
   };
 
