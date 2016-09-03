@@ -2059,7 +2059,8 @@ var fhlLecture = (function () {
           {
             var txt = json.record[0].text;
             $('#parsingPopUpInside').text(txt);
-            $('#parsingPopUpInside').css("max-width", "100%");
+            $('#parsingPopUpInside').css("width", "100%");
+            $('#parsingPopUpInside').css("max-width", "323px"); //cy:200px乘黃金比例1.618
             $('#parsingPopUpInside').css("white-space", "normal");
           }
           else
