@@ -1796,3 +1796,10 @@ nav#fhlTopMenu {
   user-select: none;           /* Non-prefixed version, currently
                                   not supported by any browser */
 }
+ .lec .ft{
+  cursor:pointer;
+}
+ .lec .ver{
+   color:rgba(0, 80, 255, 1);
+   font-size:0.5em;
+ }

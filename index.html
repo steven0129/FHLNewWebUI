@@ -2312,7 +2312,7 @@ var fhlLecture = (function () {
               for (var j = 0; j < rspArr.length; j++) {
                 var r1 = rspArr[j];
                 if ( rspArr.length > 1)
-                  var vname = " (" + r1.v_name + ") "; //新譯本 合和本 etc
+                  var vname = "<span class='ver'> (" + r1.v_name + ")</span> "; //新譯本 合和本 etc
                 else
                   var vname = ""; //只有一種版本就不要加了
 
@@ -2388,7 +2388,7 @@ var fhlLecture = (function () {
         $lec.find('.lec').each(function (a1, a2) {
           var ver = $(a2).attr('ver');
           $(this).find('.verseContent').each(function (aa1, aa2) {
-            a2.innerHTML = aa2.innerHTML.replace(/【(\d+)】/g, "<span class=ft ft=$1 ver='" + ver + "' chap=" + ps.chap + " engs='" + ps.engs + "'>【$1】</span>");
+            aa2.innerHTML = aa2.innerHTML.replace(/【(\d+)】/g, "<span class=ft ft=$1 ver='" + ver + "' chap=" + ps.chap + " engs='" + ps.engs + "'>【$1】</span>");
           });
         });
       }
