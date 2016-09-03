@@ -2038,6 +2038,39 @@ var fhlLecture = (function () {
         });
     })();
     
+    // .ft 注腳 click
+    $lecMain.delegate('.ft', {
+      click: function (e) {
+        //console.log(this); //範例: <span class=ft ft=42 ver=tcv chap=2>【42】</span>
+        // http://bkbible.fhl.net/json/rt.php?engs=Gen&chap=2&version=tcv&gb=0&id=42
+
+        var offset = $(this).offset();
+        offset.top += $(this).height() + 10;
+        parsingPopUp.render(ps, parsingPopUp.dom, offset, "ft");
+
+        var ftid = $(this).attr('ft');
+        var engs = $(this).attr('engs');
+        var chap = $(this).attr('chap');
+        var ver = $(this).attr('ver');
+        var url = "rt.php?engs=" + engs + "&chap=" + chap + "&version=" + ver + "&id=" + ftid;
+        fhl.json_api_text(url, function (a1, a2) {
+          var json = JSON.parse(a1);
+          if (json.status == "success" && json.record.length>0 )
+          {
+            var txt = json.record[0].text;
+            $('#parsingPopUpInside').text(txt);
+            $('#parsingPopUpInside').css("max-width", "100%");
+            $('#parsingPopUpInside').css("white-space", "normal");
+          }
+          else
+          {
+            $('#parsingPopUpInside').text("錯誤:可回報下訊息- "+a1);
+          }
+        }, function (a1, a2) {
+            $('#parsingPopUpInside').text("錯誤:於" + url + "時發生");
+        }, null);
+      }
+    });
   };
   
   fn.when_bclick_or_nclick = function (fnb, fnn) {
@@ -2112,6 +2145,8 @@ var fhlLecture = (function () {
     //$('.chapBack').click(function(e){});
     //$('.chapNext').click(function(e){});
     //$('#lecMain').scroll(function () { });
+
+    // .ft click 也移到 init 完成
   };
   fn.render = function (ps, dom) {
     //console.log('start of fhlLecture render');
@@ -2252,7 +2287,7 @@ var fhlLecture = (function () {
                 //$("<div>" + sec + " " + bibleText + "</div>"));
 
                 $htmlContent.children().eq(j).append(
-                $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span class='verseContent'>" + bibleText + "</span></div></div>"));
+                $("<div ver='"+ rspArr[j].version + "' chap=" + chap + " sec=" + sec + " class='lec'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span class='verseContent'>" + bibleText + "</span></div></div>"));
 
               }//for each verse
             }//for each version
@@ -2284,7 +2319,7 @@ var fhlLecture = (function () {
                 if (i >= r1.record_count) {
                   //此版本 本章節比較少, 
                   onever.append(
-                $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span class='verseContent'>" + vname + "</span></div></div>"));
+                $("<div ver='" + rspArr[j].version + "' chap=" + chap + " sec=" + sec + " class='lec'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span class='verseContent'>" + vname + "</span></div></div>"));
                 }
                 else {
 
@@ -2310,7 +2345,7 @@ var fhlLecture = (function () {
                   }
 
                   onever.append(
-                  $("<div chap=" + chap + " sec=" + sec + " class='lec " + rspArr[j].version + "'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span class='verseContent'>" + bibleText + vname + "</span></div></div>"));
+                  $("<div ver='" + rspArr[j].version + "' chap=" + chap + " sec=" + sec + " class='lec'><div style='margin: 0px 20px 0px 1px; padding: 7px 0px; height: 100%;'><span class='verseNumber'>" + sec + "</span><span class='verseContent'>" + bibleText + vname + "</span></div></div>"));
 
                 }
 
@@ -2326,8 +2361,6 @@ var fhlLecture = (function () {
       $lec.find('#lecMain').first()
         .html(htmlContent)
         .attr('mode', mode);
-
-
       
       fhlLecture.reshape(ps);
 
@@ -2351,17 +2384,12 @@ var fhlLecture = (function () {
       setFont();
       that.selectLecture(null, null, ps.sec);
 
-      {
-        $lec.find('.verseContent').each(function (a1, a2) {
-          console.log(a2.innerHTML);
-          var aa2 = a2.innerHTML.match(/【(\d)】/);
-          if (aa2 != null)// null,表示沒有注解 【42】
-          {
-            //var idref = parseInt(aa2[1]);//[1]會等於42
-            a2.innerHTML = a2.innerHTML.replace(/【(\d)】/, "<span class=ft ft=" + aa2[1] + ">【" + aa2[1] + "】</span>");
-            //a2.innerHTML.replace(/【(\d)】/, "<span class=ft>【】</span>");
-          }
-
+      {// 2016.08 snow, 注腳
+        $lec.find('.lec').each(function (a1, a2) {
+          var ver = $(a2).attr('ver');
+          $(this).find('.verseContent').each(function (aa1, aa2) {
+            a2.innerHTML = aa2.innerHTML.replace(/【(\d+)】/g, "<span class=ft ft=$1 ver='" + ver + "' chap=" + ps.chap + " engs='" + ps.engs + "'>【$1】</span>");
+          });
         });
       }
 
@@ -3225,8 +3253,31 @@ var parsingPopUp={
     });
   },
   render:function(ps,dom,offset,par){
-    var that=this;
-    if(par=="psn"){
+    var that = this;
+    if (par == "ft") {
+      var html = '<div id="parsingPopUpTriangle"></div><div id="parsingPopUpInside">' + "取得資料中..." + '</div>';
+      dom.html(html);
+      var winH=$(window).height();
+      var domH=(that.dom.height()>200)?200+30:that.dom.height();
+
+      if (offset != null) {
+        if (offset.top + domH + 12 + 15 > winH) {
+          offset.top -= domH + 40;
+          offset.left -= 40;
+          $("#parsingPopUpTriangle").addClass("parsingPopUpLowerTriangle");
+        }
+        else {
+          offset.top += 0;
+          offset.left -= 40;
+          $("#parsingPopUpTriangle").addClass("parsingPopUpUpperTriangle");
+        }
+      }
+
+      that.dom.show();
+      dom.offset(offset);
+      that.registerEvents(ps);
+    }
+    else if(par=="psn"){
       var ajaxUrl=getAjaxUrl('sd',ps);
       $.ajax({
         url:ajaxUrl
@@ -3240,7 +3291,7 @@ var parsingPopUp={
         dom.html(html);
         var winH=$(window).height();
         var domH=(that.dom.height()>200)?200+40:that.dom.height();
-
+        whenoverwindow_offset_modified();
         if(offset != null){
           if(offset.top+domH+12+15>winH){
             offset.top-=domH+40;
@@ -3255,6 +3306,7 @@ var parsingPopUp={
           that.dom.show();
           dom.offset(offset);
         }
+
         /*dom.html(html);
         if(offset!=null){
           var lecTop=164;
@@ -3308,7 +3360,7 @@ var parsingPopUp={
         dom.html(html);
         var winH=$(window).height();
         var domH=(that.dom.height()>200)?200+40:that.dom.height();
-
+        //whenoverwindow_offset_modified();
         if(offset != null){
           if(offset.top+domH+12+15>winH){
             offset.top-=domH+30;
