@@ -486,6 +486,11 @@ fhlmap.R = fhlmap.R || {
       /// <param type="JSON" name="datas" parameterArray="false"> sobj 查詢的結果 </param>
       this.refs.gmap.set_data(datas);
     },
+    set_active: function (id) {
+      /// <summary> 相當於在地圖上click marker, 提供經文中mark使用 (呼叫gmap.set_active) </summary>
+      /// <param type="JSON" name="datas" parameterArray="false"> id參數, 每個地點都有編號 </param>
+      this.refs.gmap.set_active(id);//add 2016.10
+    },
     auto_zoom: function () {
       this.refs.gmap.auto_zoom();
     },

@@ -3,3 +3,6 @@
 log/*.log
 /.vs/FHLNewWebUI/v14/.suo
 /.vs/config/applicationhost.config
+/tech_js.html
+/tech_map2.html
+/tech_map3.html
