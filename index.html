@@ -2384,8 +2384,9 @@ var fhlLecture = (function () {
 											//var strpho = (ps.ispho == false || isphoto == false) ? "" : "<img class='pho'></img>";
 											var strpho = (ps.ispho == false || isphoto == false) ? "" : "<a target='_blank' href='http://bible.fhl.net/object/sd.php?gb=0&LIMIT=" + b1 + "'><img class='pho'></img></a>";
 											var strsite = (ps.ispos == false || issite == false) ? "" : "<img class='pos'></img>";
-
-											str = str.replace(b2, "<span class='sobj' sid=" + b1 + "><span>$2</span>" + strsite + strpho + "</span>");
+                      
+										  str = str.replace(b2, "<span class='sobj' sid=" + b1 + "><span>$1</span>" + strsite + strpho + "</span>");
+                      
 										}
 									});
 

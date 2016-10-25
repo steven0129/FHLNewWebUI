@@ -253,12 +253,13 @@ fhlmap.R = fhlmap.R || {
               bound.extend(paths[i]);
             position = bound.getCenter();
           }
+          "".substr(0, "".length < 2 ? "".length : 2);
 
           var marker = new google.maps.Marker(
             {
               position: position,
               //map: pthis._map, //再用 set來打開
-              label: a1.cname
+              label: a1.c1name.substr(0, a1.c1name.length < 2 ? a1.c1name.length : 2)
             });
           jo["marker"] = marker;
 
@@ -267,7 +268,7 @@ fhlmap.R = fhlmap.R || {
 
           // infowindow
           marker.addListener('click', function () {
-            var txt = a1.cname + ((a1.otype == 2) ? "地區" : "");
+            var txt = a1.c1name + ((a1.otype == 2) ? "地區" : "");
             var infowindow = new google.maps.InfoWindow({
               content: txt
             });
