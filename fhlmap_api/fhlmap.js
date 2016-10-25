@@ -46,8 +46,8 @@ fhlmap.R = fhlmap.R || {
       var bb = btwdata.polyline.getPath();
       var aa = google.maps.geometry.spherical.computeLength(bb);
       var param2 = {
-        "na1": data1.cname,
-        "na2": data2.cname,
+        "na1": data1.c1name,
+        "na2": data2.c1name,
         "dist": aa
       };
       if (this._on_btw_polyline_over.length == 0) {
@@ -340,6 +340,8 @@ fhlmap.R = fhlmap.R || {
         // infowindows 需要的 data
         if (a1.cname != null)
           jo.cname = a1.cname;
+        if (a1.c1name != null)
+          jo.c1name = a1.c1name;
         if (a1.ename != null)
           jo.ename = a1.ename;
         if (a1.mname != null)
