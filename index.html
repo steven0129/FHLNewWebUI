@@ -10,17 +10,17 @@
 		<meta property="og:site_name" content="FHL信望愛聖經工具"/>
 		<meta property="og:description" content="" />
 
-    <!-- 第3方函式庫, 統一 include: jquery/jqueryUI, react, linq, -->
-    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
-    <script src="https://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+		<!-- 第3方函式庫, 統一 include: jquery/jqueryUI, react, linq, -->
+		<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
+		<script src="https://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
 
 		<script src="libs/react/react-0.13.1.min.js"></script>
-  
-    <script src="libs/linq.js_ver2.2.0.2/linq.min.js"></script>
-    <script src="libs/linq.js_ver2.2.0.2/jquery.linq.min.js"></script>
-    
-  
+	
+		<script src="libs/linq.js_ver2.2.0.2/linq.min.js"></script>
+		<script src="libs/linq.js_ver2.2.0.2/jquery.linq.min.js"></script>
+		
+	
 		<title>信望愛聖經工具</title>
 		<link rel="shortcut icon" href="images/FHLLOGO.ico" type="image/x-icon"/> 
 
@@ -711,7 +711,7 @@ var bookSelectName={
 								var isIE11 = !!navigator.userAgent.match(/Trident.*rv\:11\./);
 
 								if (/msie/.test(navigator.userAgent.toLowerCase())) //replace 2016.11, 參照: http://www.fwolf.com/blog/post/35
-						    // if ($.browser.msie || isIE11) ( jQuery 1.90之後就不支援了)//mark 2016.11
+								// if ($.browser.msie || isIE11) ( jQuery 1.90之後就不支援了)//mark 2016.11
 								{
 										var position=that.offset();
 										position.left=$('#old-testament').offset().left+128*(selectedColumnIndex)+50;
@@ -2386,9 +2386,9 @@ var fhlLecture = (function () {
 											//var strpho = (ps.ispho == false || isphoto == false) ? "" : "<img class='pho'></img>";
 											var strpho = (ps.ispho == false || isphoto == false) ? "" : "<a target='_blank' href='http://bible.fhl.net/object/sd.php?gb=0&LIMIT=" + b1 + "'><img class='pho'></img></a>";
 											var strsite = (ps.ispos == false || issite == false) ? "" : "<img class='pos'></img>";
-                      
-										  str = str.replace(b2, "<span class='sobj' sid=" + b1 + "><span>$1</span>" + strsite + strpho + "</span>");
-                      
+											
+											str = str.replace(b2, "<span class='sobj' sid=" + b1 + "><span>$1</span>" + strsite + strpho + "</span>");
+											
 										}
 									});
 
@@ -2566,13 +2566,13 @@ var fhlLecture = (function () {
 						aa2.innerHTML = aa2.innerHTML.replace(/【(\d+)】/g, "<span class=ft ft=$1 ver='" + ver + "' chap=" + ps.chap + " engs='" + ps.engs + "'>【$1】</span>");
 					});
 
-          //if ( ver == 'fhlwh')
-          //{// 2016.10 snow, 新約原文,要套用字型 (剛剛好也是每個 .lec, 所以就搭注腳的forEach順風車)
-          //  $(a2).css('font-family', 'COBSGreekWeb');
-		  //  		}
+					//if ( ver == 'fhlwh')
+					//{// 2016.10 snow, 新約原文,要套用字型 (剛剛好也是每個 .lec, 所以就搭注腳的forEach順風車)
+					//  $(a2).css('font-family', 'COBSGreekWeb');
+			//  		}
 				});
 			}
-      
+			
 			
 
 			that.registerEvents(ps);
@@ -2639,14 +2639,14 @@ var fhlInfo={
 			var fhlInfoWidth = 500;//這邊改了，css裡面也要改
 		$('#fhlInfo').css({ 'left': $(window).width() - fhlInfoWidth - 12 + 'px' });// 12 是外面border
 
-    // snow add, 2016.10 經文中的地點mark被click, 
+		// snow add, 2016.10 經文中的地點mark被click, 
 		$(document).delegate('', {
-		  'sobj_pos': function (e, p1) {
-		    if (ps.titleId == "fhlInfoMap")
-		    {
-		      rfhlmap.set_active(p1.sid);
-		    }
-		  }
+			'sobj_pos': function (e, p1) {
+				if (ps.titleId == "fhlInfoMap")
+				{
+					rfhlmap.set_active(p1.sid);
+				}
+			}
 		});
 	},
 	registerEvents:function(){
@@ -3773,11 +3773,11 @@ var parsingPopUp={
 			background-position: center center;
 			cursor:pointer;
 		}
-    @font-face {
-      font-family: 'COBSGreekWeb';
-      src: url('font/COBSGreekWeb.ttf') format('truetype');
-    }
-  </style>
+		@font-face {
+			font-family: 'COBSGreekWeb';
+			src: url('font/COBSGreekWeb.ttf') format('truetype');
+		}
+	</style>
 </head>
 <body>
 <nav id="fhlTopMenu">
