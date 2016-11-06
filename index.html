@@ -27,9 +27,14 @@
 		<link rel="stylesheet" href="./libs/fhl.css" />
 		<link rel="stylesheet" href="./libs/icons/css/font-awesome.css" />
 
-		<!--2015.09.02(三) snow add. React lib-->
+		
 		<script src="./libs/jquery.hotkeys.js"></script>
-		<script src="bible_audio_api/audiobible_api.js"></script>
+	
+		<!--2015.09.02(三) snow add. React lib (可以共用的react))-->
+		<script src="commonR/processbar.js"></script><!--緣由:講道-->
+		<script src="commonR/audio.js"></script><!--緣由:講道-->
+
+		
 		<!-- 2015.09.24(四) snow add. obphp lib -->
 		<link href="ob_api/ob_api.css" rel="stylesheet" />
 		<link href="ob_api/ob_table.css" rel="stylesheet" />
@@ -40,7 +45,7 @@
 		
 		<script src="search_api/abvphp_api.js"></script>
 		<script src="search_api/fhl_api.js"></script>
-		<!--<script src="preach_api/c_preach_frame.js"></script>--> <!--講道功能 被 preach_api 取代 react.js -->
+		
 
 		<link href="search_api/search.css" rel="stylesheet" />
 		<script src="search_api/qsbphp.create_color_span_from_bible_text.js"></script>
@@ -56,11 +61,11 @@
 		<script src="tsk_api/tsk.tskapi.js"></script>
 		<script src="tsk_api/tsk.R.frame.oneref.js"></script>
 
-	<!-- 講道要用的 2016.01.13 取代原有的 c_preach_frame.js -->
-	<script src="commonR/processbar.js"></script>
-	<script src="commonR/audio.js"></script>
-	<script src="preach_api/preach_api.js"></script>
+	  <!-- 講道要用的 2016.01.13  -->
+	  <script src="preach_api/preach_api.js"></script>
 
+    <!--有聲聖經-->
+    <script src="bible_audio_api/audiobible_api.js"></script>
 	<!-- 版權宣告要用的 2016.01.21(四) -->
 	<script src="copyright_api/copyright_api.js"></script>
 		<!--[if IE]>
