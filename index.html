@@ -712,7 +712,10 @@ var bookSelectName={
 								$('#old-testament>ul>li:gt(' + selectedColumnIndex + ')').animate( { left: '75px' }, { queue:false, duration:200 });
 								var idx=getBookFunc("index",that.attr('chineses'));
 								var isIE11 = !!navigator.userAgent.match(/Trident.*rv\:11\./);
-								if($.browser.msie || isIE11) {
+
+								if (/msie/.test(navigator.userAgent.toLowerCase())) //replace 2016.11, 參照: http://www.fwolf.com/blog/post/35
+						    // if ($.browser.msie || isIE11) ( jQuery 1.90之後就不支援了)//mark 2016.11
+								{
 										var position=that.offset();
 										position.left=$('#old-testament').offset().left+128*(selectedColumnIndex)+50;
 										position.top=$('#old-testament').offset().top+30;
