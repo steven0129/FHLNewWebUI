@@ -2351,11 +2351,13 @@ var fhlLecture = (function () {
 								var id2obj = {};
 								$.each(jrr1.record, function (aaa1, aaa2) {
 									var id = aaa2.id.toString();
-									var nas = {};
+									var nas = {};//Egyte,埃及,埃及. 就可以排除同樣名稱的
 									nas[aaa2.cname] = 1;
 									nas[aaa2.c1name] = 1;
 									nas[aaa2.c2name] = 1;
-									nas[aaa2.ename] = 1;
+									if (aaa2.ename != null && aaa2.ename.trim().length != 0)
+									  nas["[ ,\\n:;\\.]" + aaa2.ename + "[ ,\\n:;\\.]"] = 1;//斷開英文可能結尾「空白,逗號,句號,冒號, 2016.11
+									  //nas[aaa2.ename] = 1;
 
 									var nas2 = [];
 									$.each(nas, function (b1, b2) {
@@ -2364,7 +2366,7 @@ var fhlLecture = (function () {
 											nas2.push(b1);
 									});
 
-									var regstr = "((" + nas2.join(")|(") + "))"; // ((羅馬)|(Rome))
+									var regstr = "((" + nas2.join(")|(") + "))"; // ((羅馬)|([空白字元]Rome[空白字元]))
 									var regex = new RegExp(regstr, "i");
 									id2obj[id] = aaa2;
 									id2reg[id] = regex;
