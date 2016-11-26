@@ -2089,7 +2089,10 @@ var fhlLecture = (function () {
 				var engs = $(this).attr('engs');
 				var chap = $(this).attr('chap');
 				var ver = $(this).attr('ver');
+				
 				var url = "rt.php?engs=" + engs + "&chap=" + chap + "&version=" + ver + "&id=" + ftid;
+				if (ps.gb == 1)
+				  url += "&gb=1";
 				fhl.json_api_text(url, function (a1, a2) {
 					var json = JSON.parse(a1);
 					if (json.status == "success" && json.record.length>0 )
@@ -2342,7 +2345,9 @@ var fhlLecture = (function () {
 						// add 2016.10 地圖與照片
 						if (ps.ispos || ps.ispho)
 						{
-							var url2 = "sobj.php?engs=" + ps.engs + "&chap=" + ps.chap;
+						  var url2 = "sobj.php?engs=" + ps.engs + "&chap=" + ps.chap;
+						  if (ps.gb == 1)
+						    url2 += "&gb=1";
 							fhl.json_api_text(url2, function (aa1, aa2) {
 								var jrr1 = JSON.parse(aa1);
 								//console.log(jrr1);
@@ -2471,7 +2476,9 @@ var fhlLecture = (function () {
 
 						// add 2016.10 地圖與照片
 						if (ps.ispos || ps.ispho) {
-							var url2 = "sobj.php?engs=" + ps.engs + "&chap=" + ps.chap;
+						  var url2 = "sobj.php?engs=" + ps.engs + "&chap=" + ps.chap;
+						  if (ps.gb == 1)
+						    url2 += "&gb=1";
 							fhl.json_api_text(url2, function (aa1, aa2) {
 								var jrr1 = JSON.parse(aa1);
 								//console.log(jrr1);
