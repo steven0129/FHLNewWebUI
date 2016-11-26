@@ -317,8 +317,8 @@ function getBookFunc(func,bookName){
   var i;
   // 2016.11, 簡體中文, 會取出 null, 修正完畢
 	for (i = 0; i < book.length; i++) {
-	  if (pageState.gb == 0 && book[i] == bookName) break;
-	  else if (pageState.gb == 1 && bookGB[i] == bookName) break;
+	  if (book[i] == bookName) break;
+	  if (bookGB[i] == bookName) break;
 	}
 	
 	var ret;
@@ -727,7 +727,7 @@ var bookSelectName={
 								$('#old-testament>ul>li:lt(' + selectedColumnIndex + ')').animate( { left: '-75px' }, { queue:false, duration:200 });
 								$('#old-testament>ul>li:eq(' + selectedColumnIndex + ')').animate( { left: '-75px' }, { queue:false, duration:200 });
 								$('#old-testament>ul>li:gt(' + selectedColumnIndex + ')').animate( { left: '75px' }, { queue:false, duration:200 });
-								var idx=getBookFunc("index",that.attr('chineses'));
+								var idx = getBookFunc("index", that.attr('chineses'));
 								var isIE11 = !!navigator.userAgent.match(/Trident.*rv\:11\./);
 
 								if (/msie/.test(navigator.userAgent.toLowerCase())) //replace 2016.11, 參照: http://www.fwolf.com/blog/post/35
@@ -799,7 +799,7 @@ var bookSelectName={
 };
 
 var bookSelectChapter={
-	init:function(ps,dom,idx,position){
+  init: function (ps, dom, idx, position) {
 		this.dom=dom;
 		this.idx=idx;
 		this.dom.css({
@@ -833,7 +833,7 @@ var bookSelectChapter={
 				clearTimeout($.data( $('#bookSelectChapter')[0], "bookSelectChapterAutoCloseTimeout" ));
 		});
 	},
-	render:function(ps,dom,idx){
+	render: function (ps, dom, idx) {
 		var numOfChapters=bookChapters[idx];
 		var html="<div><ul>";
 		for(var i=1;i<=numOfChapters;i++){
