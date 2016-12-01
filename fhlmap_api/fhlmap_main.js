@@ -12,7 +12,7 @@ function fhlmap_render(ps,dom)
     fhlmap_chap_prev = -1 ;// 為了trigger 下面的 set 函式, 當「rfhlmap_titleId_prev != "fhlInfoMap"」時必須用到, 因為它重新create了
   }
   if (fhlmap_chap_prev != ps.chap || fhlmap_engs_prev != ps.engs) {
-    fhl.json_api_text_post("sobj.php?engs=" + ps.engs + "&chap=" + ps.chap + "", null, function (jstr) {
+    fhl.json_api_text_post("sobj.php?engs=" + ps.engs + "&chap=" + ps.chap + "&gb=" + (ps.gb==1?"1":"0"), null, function (jstr) {
       var jr1 = JSON.parse(jstr);
       rfhlmap.set_data(jr1.record);
     }, function (er) { });

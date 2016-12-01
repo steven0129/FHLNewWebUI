@@ -254,7 +254,19 @@ var bookFullName=new Array( "創世記","出埃及記","利未記","民數記","
 														"哥林多前書","哥林多後書","加拉太書","以弗所書","腓立比書","歌羅西書",
 														"帖撒羅尼迦前書","帖撒羅尼迦後書","提摩太前書","提摩太後書",
 														"提多書","腓利門書","希伯來書","雅各書",
-														"彼得前書","彼得後書","約翰壹書","約翰貳書","約翰參書","猶大書","啟示錄");
+														"彼得前書", "彼得後書", "約翰壹書", "約翰貳書", "約翰參書", "猶大書", "啟示錄");
+var bookFullName2 = new Array("创世记", "出埃及记", "利未记", "民数记", "申命记", "约书亚记", "士师记",
+														"路得记", "撒母耳记上", "撒母耳记下", "列王纪上", "列王纪下",
+														"历代志上", "历代志下", "以斯拉记", "尼希米记", "以斯帖记", "约伯记",
+														"诗篇", "箴言", "传道书", "雅歌", "以赛亚书", "耶利米书",
+														"耶利米哀歌", "以西结书", "但以理书", "何西阿书", "约珥书", "阿摩司书",
+														"俄巴底亚书", "约拿书", "弥迦书", "那鸿书", "哈巴谷书",
+														"西番雅书", "哈该书", "撒迦利亚书", "玛拉基书",
+														"马太福音", "马可福音", "路加福音", "约翰福音", "使徒行传", "罗马书",
+														"哥林多前书", "哥林多後书", "加拉太书", "以弗所书", "腓立比书", "歌罗西书",
+														"帖撒罗尼迦前书", "帖撒罗尼迦後书", "提摩太前书", "提摩太後书",
+														"提多书", "腓利门书", "希伯来书", "雅各书",
+														"彼得前书", "彼得後书", "约翰壹书", "约翰贰书", "约翰参书", "犹大书", "启示录");
 var bookChapters=new Array( 50,40,27,36,34,24,21,4,31,24,22,25,
 														29,36,10,13,10,42,150,31,12,8,66,52,
 														5,48,12,14,3,9,1,4,7,3,3,3,2,14,4,
@@ -302,9 +314,13 @@ function getAjaxUrl(func,ps,idx){
 }
 
 function getBookFunc(func,bookName){
-	var i;
-	for(i=0;i<book.length;i++)
-		if(book[i]==bookName)break;
+  var i;
+  // 2016.11, 簡體中文, 會取出 null, 修正完畢
+	for (i = 0; i < book.length; i++) {
+	  if (book[i] == bookName) break;
+	  if (bookGB[i] == bookName) break;
+	}
+	
 	var ret;
 	switch(func){
 		case "index":
@@ -316,7 +332,7 @@ function getBookFunc(func,bookName){
 			ret=i;
 			break;
 		case "bookFullName":
-			ret=bookFullName[i];
+		  ret = (pageState.gb == 1) ? bookFullName2[i] : bookFullName[i];
 			break;
 		case "bookChapters":
 			ret=bookChapters[i];
@@ -652,10 +668,10 @@ var bookSelect={
 				}
 		});
 	},
-	render:function(ps,dom){
-			var bookName=getBookFunc("bookFullName",ps.chineses);
+	render: function (ps, dom) {
+	  var bookName = getBookFunc("bookFullName", ps.chineses);
 			var html="";
-			if(bookName!="詩篇")
+			if (bookName != "詩篇" && bookName != "诗篇")
 					html=bookName+"： 第"+chineseNumber[ps.chap]+"章";
 			else
 					html=bookName+"： 第"+chineseNumber[ps.chap]+"篇";
@@ -711,7 +727,7 @@ var bookSelectName={
 								$('#old-testament>ul>li:lt(' + selectedColumnIndex + ')').animate( { left: '-75px' }, { queue:false, duration:200 });
 								$('#old-testament>ul>li:eq(' + selectedColumnIndex + ')').animate( { left: '-75px' }, { queue:false, duration:200 });
 								$('#old-testament>ul>li:gt(' + selectedColumnIndex + ')').animate( { left: '75px' }, { queue:false, duration:200 });
-								var idx=getBookFunc("index",that.attr('chineses'));
+								var idx = getBookFunc("index", that.attr('chineses'));
 								var isIE11 = !!navigator.userAgent.match(/Trident.*rv\:11\./);
 
 								if (/msie/.test(navigator.userAgent.toLowerCase())) //replace 2016.11, 參照: http://www.fwolf.com/blog/post/35
@@ -783,7 +799,7 @@ var bookSelectName={
 };
 
 var bookSelectChapter={
-	init:function(ps,dom,idx,position){
+  init: function (ps, dom, idx, position) {
 		this.dom=dom;
 		this.idx=idx;
 		this.dom.css({
@@ -817,7 +833,7 @@ var bookSelectChapter={
 				clearTimeout($.data( $('#bookSelectChapter')[0], "bookSelectChapterAutoCloseTimeout" ));
 		});
 	},
-	render:function(ps,dom,idx){
+	render: function (ps, dom, idx) {
 		var numOfChapters=bookChapters[idx];
 		var html="<div><ul>";
 		for(var i=1;i<=numOfChapters;i++){
@@ -1416,17 +1432,21 @@ var versionSelect={
 
 function setBook(ps,bookName){
 	var idx=null;
-	if(book.indexOf(bookName)!=-1){
-		idx=book.indexOf(bookName);
-	}else if(bookEng.indexOf(bookName)!=-1){
-		idx=book.indexOf(bookName);
-	}else{
-		idx=null;
+	if (book.indexOf(bookName) != -1) {
+	  idx = book.indexOf(bookName);
+	}
+	else if (bookGB.indexOf(bookName) != -1) {
+	  idx = bookGB.indexOf(bookName);
+	}
+	else if (bookEng.indexOf(bookName) != -1) {
+	  idx = book.indexOf(bookName);
+	} else {
+	  idx = null;
 	}
 	if(idx!=null){
 		ps.chineses=book[idx];
 		ps.engs=bookEng[idx];
-	}else{
+	} else {
 		console.log('setBook error:idx is null');
 	}
 }
@@ -2089,7 +2109,10 @@ var fhlLecture = (function () {
 				var engs = $(this).attr('engs');
 				var chap = $(this).attr('chap');
 				var ver = $(this).attr('ver');
+				
 				var url = "rt.php?engs=" + engs + "&chap=" + chap + "&version=" + ver + "&id=" + ftid;
+				if (ps.gb == 1)
+				  url += "&gb=1";
 				fhl.json_api_text(url, function (a1, a2) {
 					var json = JSON.parse(a1);
 					if (json.status == "success" && json.record.length>0 )
@@ -2342,7 +2365,9 @@ var fhlLecture = (function () {
 						// add 2016.10 地圖與照片
 						if (ps.ispos || ps.ispho)
 						{
-							var url2 = "sobj.php?engs=" + ps.engs + "&chap=" + ps.chap;
+						  var url2 = "sobj.php?engs=" + ps.engs + "&chap=" + ps.chap;
+						  if (ps.gb == 1)
+						    url2 += "&gb=1";
 							fhl.json_api_text(url2, function (aa1, aa2) {
 								var jrr1 = JSON.parse(aa1);
 								//console.log(jrr1);
@@ -2471,7 +2496,9 @@ var fhlLecture = (function () {
 
 						// add 2016.10 地圖與照片
 						if (ps.ispos || ps.ispho) {
-							var url2 = "sobj.php?engs=" + ps.engs + "&chap=" + ps.chap;
+						  var url2 = "sobj.php?engs=" + ps.engs + "&chap=" + ps.chap;
+						  if (ps.gb == 1)
+						    url2 += "&gb=1";
 							fhl.json_api_text(url2, function (aa1, aa2) {
 								var jrr1 = JSON.parse(aa1);
 								//console.log(jrr1);
