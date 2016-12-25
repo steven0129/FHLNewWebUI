@@ -10,22 +10,30 @@
 		<meta property="og:site_name" content="FHL信望愛聖經工具"/>
 		<meta property="og:description" content="" />
 
+		<!-- 第3方函式庫, 統一 include: jquery/jqueryUI, react, linq, -->
+		<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
+		<script src="https://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
 
+		<script src="libs/react/react-0.13.1.min.js"></script>
+	
+		<script src="libs/linq.js_ver2.2.0.2/linq.min.js"></script>
+		<script src="libs/linq.js_ver2.2.0.2/jquery.linq.min.js"></script>
+		
+	
 		<title>信望愛聖經工具</title>
 		<link rel="shortcut icon" href="images/FHLLOGO.ico" type="image/x-icon"/> 
 
 		<link rel="stylesheet" href="./libs/fhl.css" />
 		<link rel="stylesheet" href="./libs/icons/css/font-awesome.css" />
 
-		<!--2015.09.02(三) snow add. React lib-->
-		<script src="libs/react/react-0.13.1.min.js"></script>
-		<script src="libs/react/react-with-addons-0.13.1.min.js"></script>
-		<script src="./libs/jquery-1.11.3.js"></script>
-		<script src="./libs/xml2json.min.js"></script>
-		<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
-		<script src="https://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+		
 		<script src="./libs/jquery.hotkeys.js"></script>
-		<script src="bible_audio_api/audiobible_api.js"></script>
+	
+		<!--2015.09.02(三) snow add. React lib (可以共用的react))-->
+		<script src="commonR/processbar.js"></script><!--緣由:講道-->
+		<script src="commonR/audio.js"></script><!--緣由:講道-->
+		
 		<!-- 2015.09.24(四) snow add. obphp lib -->
 		<link href="ob_api/ob_api.css" rel="stylesheet" />
 		<link href="ob_api/ob_table.css" rel="stylesheet" />
@@ -33,11 +41,10 @@
 		<!--搜尋結果上色要用的 2015.10.29(四)-->
 		<script src="search_api/sephp.react.txt.txtSn.js"></script> 
 	 <!--Start of 搜尋功能-->
-		<script src="libs/linq.js_ver2.2.0.2/linq.min.js"></script>
-		<script src="libs/linq.js_ver2.2.0.2/jquery.linq.min.js"></script>
+		
 		<script src="search_api/abvphp_api.js"></script>
 		<script src="search_api/fhl_api.js"></script>
-		<!--<script src="preach_api/c_preach_frame.js"></script>--> <!--講道功能 被 preach_api 取代 react.js -->
+		
 
 		<link href="search_api/search.css" rel="stylesheet" />
 		<script src="search_api/qsbphp.create_color_span_from_bible_text.js"></script>
@@ -53,21 +60,17 @@
 		<script src="tsk_api/tsk.tskapi.js"></script>
 		<script src="tsk_api/tsk.R.frame.oneref.js"></script>
 
-	<!-- 講道要用的 2016.01.13 取代原有的 c_preach_frame.js -->
-	<script src="commonR/processbar.js"></script>
-	<script src="commonR/audio.js"></script>
-	<script src="preach_api/preach_api.js"></script>
+		<!-- 講道要用的 2016.01.13  -->
+		<script src="preach_api/preach_api.js"></script>
 
+		<!--有聲聖經-->
+		<script src="bible_audio_api/audiobible_api.js"></script>
 	<!-- 版權宣告要用的 2016.01.21(四) -->
 	<script src="copyright_api/copyright_api.js"></script>
 		<!--[if IE]>
 		<link rel="stylesheet" href="./libs/ie.css" type="text/css" media="screen, projection" />
 		<![endif]-->
-		<script src="https://code.jquery.com/jquery-migrate-1.2.1.js"></script>
 
-		<!--<script src="https://fb.me/react-0.13.3.min.js"></script>
-		<script src="https://fb.me/react-with-addons-0.13.3.min.js"></script>
-		<script src="https://fb.me/JSXTransformer-0.13.3.js"></script>-->
 	<script src="fhlmap_api/fhlmap.js"></script>
 	<script src="fhlmap_api/fhlmap_main.js"></script>
 	<script src="https://maps.googleapis.com/maps/api/js?signed_in=true&libraries=geometry&sensor=false"></script>
@@ -251,7 +254,19 @@ var bookFullName=new Array( "創世記","出埃及記","利未記","民數記","
 														"哥林多前書","哥林多後書","加拉太書","以弗所書","腓立比書","歌羅西書",
 														"帖撒羅尼迦前書","帖撒羅尼迦後書","提摩太前書","提摩太後書",
 														"提多書","腓利門書","希伯來書","雅各書",
-														"彼得前書","彼得後書","約翰壹書","約翰貳書","約翰參書","猶大書","啟示錄");
+														"彼得前書", "彼得後書", "約翰壹書", "約翰貳書", "約翰參書", "猶大書", "啟示錄");
+var bookFullName2 = new Array("创世记", "出埃及记", "利未记", "民数记", "申命记", "约书亚记", "士师记",
+														"路得记", "撒母耳记上", "撒母耳记下", "列王纪上", "列王纪下",
+														"历代志上", "历代志下", "以斯拉记", "尼希米记", "以斯帖记", "约伯记",
+														"诗篇", "箴言", "传道书", "雅歌", "以赛亚书", "耶利米书",
+														"耶利米哀歌", "以西结书", "但以理书", "何西阿书", "约珥书", "阿摩司书",
+														"俄巴底亚书", "约拿书", "弥迦书", "那鸿书", "哈巴谷书",
+														"西番雅书", "哈该书", "撒迦利亚书", "玛拉基书",
+														"马太福音", "马可福音", "路加福音", "约翰福音", "使徒行传", "罗马书",
+														"哥林多前书", "哥林多後书", "加拉太书", "以弗所书", "腓立比书", "歌罗西书",
+														"帖撒罗尼迦前书", "帖撒罗尼迦後书", "提摩太前书", "提摩太後书",
+														"提多书", "腓利门书", "希伯来书", "雅各书",
+														"彼得前书", "彼得後书", "约翰壹书", "约翰贰书", "约翰参书", "犹大书", "启示录");
 var bookChapters=new Array( 50,40,27,36,34,24,21,4,31,24,22,25,
 														29,36,10,13,10,42,150,31,12,8,66,52,
 														5,48,12,14,3,9,1,4,7,3,3,3,2,14,4,
@@ -299,9 +314,13 @@ function getAjaxUrl(func,ps,idx){
 }
 
 function getBookFunc(func,bookName){
-	var i;
-	for(i=0;i<book.length;i++)
-		if(book[i]==bookName)break;
+  var i;
+  // 2016.11, 簡體中文, 會取出 null, 修正完畢
+	for (i = 0; i < book.length; i++) {
+	  if (book[i] == bookName) break;
+	  if (bookGB[i] == bookName) break;
+	}
+	
 	var ret;
 	switch(func){
 		case "index":
@@ -313,7 +332,7 @@ function getBookFunc(func,bookName){
 			ret=i;
 			break;
 		case "bookFullName":
-			ret=bookFullName[i];
+		  ret = (pageState.gb == 1) ? bookFullName2[i] : bookFullName[i];
 			break;
 		case "bookChapters":
 			ret=bookChapters[i];
@@ -649,10 +668,10 @@ var bookSelect={
 				}
 		});
 	},
-	render:function(ps,dom){
-			var bookName=getBookFunc("bookFullName",ps.chineses);
+	render: function (ps, dom) {
+	  var bookName = getBookFunc("bookFullName", ps.chineses);
 			var html="";
-			if(bookName!="詩篇")
+			if (bookName != "詩篇" && bookName != "诗篇")
 					html=bookName+"： 第"+chineseNumber[ps.chap]+"章";
 			else
 					html=bookName+"： 第"+chineseNumber[ps.chap]+"篇";
@@ -708,9 +727,12 @@ var bookSelectName={
 								$('#old-testament>ul>li:lt(' + selectedColumnIndex + ')').animate( { left: '-75px' }, { queue:false, duration:200 });
 								$('#old-testament>ul>li:eq(' + selectedColumnIndex + ')').animate( { left: '-75px' }, { queue:false, duration:200 });
 								$('#old-testament>ul>li:gt(' + selectedColumnIndex + ')').animate( { left: '75px' }, { queue:false, duration:200 });
-								var idx=getBookFunc("index",that.attr('chineses'));
+								var idx = getBookFunc("index", that.attr('chineses'));
 								var isIE11 = !!navigator.userAgent.match(/Trident.*rv\:11\./);
-								if($.browser.msie || isIE11) {
+
+								if (/msie/.test(navigator.userAgent.toLowerCase())) //replace 2016.11, 參照: http://www.fwolf.com/blog/post/35
+								// if ($.browser.msie || isIE11) ( jQuery 1.90之後就不支援了)//mark 2016.11
+								{
 										var position=that.offset();
 										position.left=$('#old-testament').offset().left+128*(selectedColumnIndex)+50;
 										position.top=$('#old-testament').offset().top+30;
@@ -777,7 +799,7 @@ var bookSelectName={
 };
 
 var bookSelectChapter={
-	init:function(ps,dom,idx,position){
+  init: function (ps, dom, idx, position) {
 		this.dom=dom;
 		this.idx=idx;
 		this.dom.css({
@@ -811,7 +833,7 @@ var bookSelectChapter={
 				clearTimeout($.data( $('#bookSelectChapter')[0], "bookSelectChapterAutoCloseTimeout" ));
 		});
 	},
-	render:function(ps,dom,idx){
+	render: function (ps, dom, idx) {
 		var numOfChapters=bookChapters[idx];
 		var html="<div><ul>";
 		for(var i=1;i<=numOfChapters;i++){
@@ -1410,17 +1432,21 @@ var versionSelect={
 
 function setBook(ps,bookName){
 	var idx=null;
-	if(book.indexOf(bookName)!=-1){
-		idx=book.indexOf(bookName);
-	}else if(bookEng.indexOf(bookName)!=-1){
-		idx=book.indexOf(bookName);
-	}else{
-		idx=null;
+	if (book.indexOf(bookName) != -1) {
+	  idx = book.indexOf(bookName);
+	}
+	else if (bookGB.indexOf(bookName) != -1) {
+	  idx = bookGB.indexOf(bookName);
+	}
+	else if (bookEng.indexOf(bookName) != -1) {
+	  idx = book.indexOf(bookName);
+	} else {
+	  idx = null;
 	}
 	if(idx!=null){
 		ps.chineses=book[idx];
 		ps.engs=bookEng[idx];
-	}else{
+	} else {
 		console.log('setBook error:idx is null');
 	}
 }
@@ -2083,7 +2109,10 @@ var fhlLecture = (function () {
 				var engs = $(this).attr('engs');
 				var chap = $(this).attr('chap');
 				var ver = $(this).attr('ver');
+				
 				var url = "rt.php?engs=" + engs + "&chap=" + chap + "&version=" + ver + "&id=" + ftid;
+				if (ps.gb == 1)
+				  url += "&gb=1";
 				fhl.json_api_text(url, function (a1, a2) {
 					var json = JSON.parse(a1);
 					if (json.status == "success" && json.record.length>0 )
@@ -2336,7 +2365,9 @@ var fhlLecture = (function () {
 						// add 2016.10 地圖與照片
 						if (ps.ispos || ps.ispho)
 						{
-							var url2 = "sobj.php?engs=" + ps.engs + "&chap=" + ps.chap;
+						  var url2 = "sobj.php?engs=" + ps.engs + "&chap=" + ps.chap;
+						  if (ps.gb == 1)
+						    url2 += "&gb=1";
 							fhl.json_api_text(url2, function (aa1, aa2) {
 								var jrr1 = JSON.parse(aa1);
 								//console.log(jrr1);
@@ -2345,11 +2376,13 @@ var fhlLecture = (function () {
 								var id2obj = {};
 								$.each(jrr1.record, function (aaa1, aaa2) {
 									var id = aaa2.id.toString();
-									var nas = {};
+									var nas = {};//Egyte,埃及,埃及. 就可以排除同樣名稱的
 									nas[aaa2.cname] = 1;
 									nas[aaa2.c1name] = 1;
 									nas[aaa2.c2name] = 1;
-									nas[aaa2.ename] = 1;
+									if (aaa2.ename != null && aaa2.ename.trim().length != 0)
+									  nas["[ ,\\n:;\\.]" + aaa2.ename + "[ ,\\n:;\\.]"] = 1;//斷開英文可能結尾「空白,逗號,句號,冒號, 2016.11
+									  //nas[aaa2.ename] = 1;
 
 									var nas2 = [];
 									$.each(nas, function (b1, b2) {
@@ -2358,7 +2391,7 @@ var fhlLecture = (function () {
 											nas2.push(b1);
 									});
 
-									var regstr = "((" + nas2.join(")|(") + "))"; // ((羅馬)|(Rome))
+									var regstr = "((" + nas2.join(")|(") + "))"; // ((羅馬)|([空白字元]Rome[空白字元]))
 									var regex = new RegExp(regstr, "i");
 									id2obj[id] = aaa2;
 									id2reg[id] = regex;
@@ -2384,9 +2417,9 @@ var fhlLecture = (function () {
 											//var strpho = (ps.ispho == false || isphoto == false) ? "" : "<img class='pho'></img>";
 											var strpho = (ps.ispho == false || isphoto == false) ? "" : "<a target='_blank' href='http://bible.fhl.net/object/sd.php?gb=0&LIMIT=" + b1 + "'><img class='pho'></img></a>";
 											var strsite = (ps.ispos == false || issite == false) ? "" : "<img class='pos'></img>";
-                      
-										  str = str.replace(b2, "<span class='sobj' sid=" + b1 + "><span>$1</span>" + strsite + strpho + "</span>");
-                      
+											
+											str = str.replace(b2, "<span class='sobj' sid=" + b1 + "><span>$1</span>" + strsite + strpho + "</span>");
+											
 										}
 									});
 
@@ -2463,7 +2496,9 @@ var fhlLecture = (function () {
 
 						// add 2016.10 地圖與照片
 						if (ps.ispos || ps.ispho) {
-							var url2 = "sobj.php?engs=" + ps.engs + "&chap=" + ps.chap;
+						  var url2 = "sobj.php?engs=" + ps.engs + "&chap=" + ps.chap;
+						  if (ps.gb == 1)
+						    url2 += "&gb=1";
 							fhl.json_api_text(url2, function (aa1, aa2) {
 								var jrr1 = JSON.parse(aa1);
 								//console.log(jrr1);
@@ -2564,13 +2599,13 @@ var fhlLecture = (function () {
 						aa2.innerHTML = aa2.innerHTML.replace(/【(\d+)】/g, "<span class=ft ft=$1 ver='" + ver + "' chap=" + ps.chap + " engs='" + ps.engs + "'>【$1】</span>");
 					});
 
-          //if ( ver == 'fhlwh')
-          //{// 2016.10 snow, 新約原文,要套用字型 (剛剛好也是每個 .lec, 所以就搭注腳的forEach順風車)
-          //  $(a2).css('font-family', 'COBSGreekWeb');
-		  //  		}
+					//if ( ver == 'fhlwh')
+					//{// 2016.10 snow, 新約原文,要套用字型 (剛剛好也是每個 .lec, 所以就搭注腳的forEach順風車)
+					//  $(a2).css('font-family', 'COBSGreekWeb');
+			//  		}
 				});
 			}
-      
+			
 			
 
 			that.registerEvents(ps);
@@ -2637,14 +2672,14 @@ var fhlInfo={
 			var fhlInfoWidth = 500;//這邊改了，css裡面也要改
 		$('#fhlInfo').css({ 'left': $(window).width() - fhlInfoWidth - 12 + 'px' });// 12 是外面border
 
-    // snow add, 2016.10 經文中的地點mark被click, 
+		// snow add, 2016.10 經文中的地點mark被click, 
 		$(document).delegate('', {
-		  'sobj_pos': function (e, p1) {
-		    if (ps.titleId == "fhlInfoMap")
-		    {
-		      rfhlmap.set_active(p1.sid);
-		    }
-		  }
+			'sobj_pos': function (e, p1) {
+				if (ps.titleId == "fhlInfoMap")
+				{
+					rfhlmap.set_active(p1.sid);
+				}
+			}
 		});
 	},
 	registerEvents:function(){
@@ -3771,11 +3806,11 @@ var parsingPopUp={
 			background-position: center center;
 			cursor:pointer;
 		}
-    @font-face {
-      font-family: 'COBSGreekWeb';
-      src: url('font/COBSGreekWeb.ttf') format('truetype');
-    }
-  </style>
+		@font-face {
+			font-family: 'COBSGreekWeb';
+			src: url('font/COBSGreekWeb.ttf') format('truetype');
+		}
+	</style>
 </head>
 <body>
 <nav id="fhlTopMenu">
