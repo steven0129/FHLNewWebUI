@@ -83,35 +83,47 @@ qsbphp.create_color_span_from_bible_text = function create_color_span_from_bible
     // 必須分開 SN 與 一般關鍵字處理, 因為 SN 若用 6, 直接replace 會使 2316 的6也被取代顏色
     if (isNaN(parseInt(a_key))) //非SN
     {
+      var reg1 = RegExp(a_key, "g");//var reg1 = RegExp('一樣的', "g");
       var a_span_key = "<span class='" + cseKey + "'>" + a_key + "</span>";
-      bible_text = bible_text.replace(a_key, a_span_key);
+      bible_text = bible_text.replace(reg1, a_span_key); // bug9: replace只會取代第1個,不會取代所有
     }
     else {
       {
         var a_span_key = "<span class='" + cseKey + "'>(" + a_key + ")</span>";
-        bible_text = bible_text.replace("(" + a_key + ")", a_span_key);
+        var reg1 = new RegExp('\\(' + a_key + '\\)', 'g');//中括號跳脫,應該要\\( 而不是 \(, 這樣會錯.
+        bible_text = bible_text.replace(reg1, a_span_key);
 
         a_span_key = "<span class='" + cseKey + "'>(" + '0' + a_key + ")</span>";//摸魚的作法
-        bible_text = bible_text.replace("(" + '0' + a_key + ")", a_span_key);//摸魚的作法
+        reg1 = new RegExp('\\(0' + a_key + '\\)', 'g');
+        bible_text = bible_text.replace(reg1, a_span_key);//摸魚的作法
+        reg1 = new RegExp('\\(00' + a_key + '\\)', 'g');
         a_span_key = "<span class='" + cseKey + "'>(" + '00' + a_key + ")</span>";//摸魚的作法
-        bible_text = bible_text.replace("(" + '00' + a_key + ")", a_span_key);//摸魚的作法
+        bible_text = bible_text.replace(reg1, a_span_key);//摸魚的作法
+        reg1 = new RegExp('\\(000' + a_key + '\\)', 'g');
         a_span_key = "<span class='" + cseKey + "'>(" + '000' + a_key + ")</span>";//摸魚的作法
-        bible_text = bible_text.replace("(" + '000' + a_key + ")", a_span_key);//摸魚的作法
+        bible_text = bible_text.replace(reg1, a_span_key);//摸魚的作法
+        reg1 = new RegExp('\\(0000' + a_key + '\\)', 'g');
         a_span_key = "<span class='" + cseKey + "'>(" + '0000' + a_key + ")</span>";//摸魚的作法
-        bible_text = bible_text.replace("(" + '0000' + a_key + ")", a_span_key);//摸魚的作法
+        bible_text = bible_text.replace(reg1, a_span_key);//摸魚的作法
       }
       {
         var a_span_key = "<span class='" + cseKey + "'>&lt;" + a_key + "&gt;</span>";
-        bible_text = bible_text.replace("&lt;" + a_key + "&gt;", a_span_key);
+        var reg1 = new RegExp('&lt;' + a_key + '&gt;', 'g');
+        bible_text = bible_text.replace(reg1, a_span_key);
 
-        a_span_key = "<span class='" + cseKey + "'>&lt;" + '0'+ a_key + "&gt;</span>";
-        bible_text = bible_text.replace("&lt;" + '0' + a_key + "&gt;", a_span_key);
+        a_span_key = "<span class='" + cseKey + "'>&lt;" + '0' + a_key + "&gt;</span>";
+        reg1 = new RegExp('&lt;0' + a_key + '&gt;', 'g');
+        bible_text = bible_text.replace(reg1, a_span_key);
         a_span_key = "<span class='" + cseKey + "'>&lt;" + '00' + a_key + "&gt;</span>";
-        bible_text = bible_text.replace("&lt;" + '00' + a_key + "&gt;", a_span_key);
+        reg1 = new RegExp('&lt;00' + a_key + '&gt;', 'g');
+        bible_text = bible_text.replace(reg1, a_span_key);
+        reg1 = new RegExp('&lt;000' + a_key + '&gt;', 'g');
         a_span_key = "<span class='" + cseKey + "'>&lt;" + '000' + a_key + "&gt;</span>";
-        bible_text = bible_text.replace("&lt;" + '000' + a_key + "&gt;", a_span_key);
+        bible_text = bible_text.replace(reg1, a_span_key);
+        reg1 = new RegExp('&lt;0000' + a_key + '&gt;', 'g');
         a_span_key = "<span class='" + cseKey + "'>&lt;" + '0000' + a_key + "&gt;</span>";
-        bible_text = bible_text.replace("&lt;" + '0000' + a_key + "&gt;", a_span_key);
+        bible_text = bible_text.replace(reg1, a_span_key);
+
       }
     }
   });
