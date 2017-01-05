@@ -1460,31 +1460,31 @@ var docEvent = (function () {
 	fn.when_vh_init = function (fn) {
 		/// <summary> view history init </summary>
 		/// <param type="fn(e,p1)" name="fn" parameterArray="false">初始化完成時執行</param>
-		$doc.delegate('', {
-			vh_init: fn
-		});
+	  $doc.on({
+	    vh_init: fn
+	  });
 	};
 	fn.when_vh_idxchanged = function (fn) {
 		/// <summary> view history idx changed </summary>
 		/// <param type="fn(e,p1)" name="fn" parameterArray="false">_idx 改變時執行 </param>
-		$doc.delegate('', {
-			vh_idxchanged: fn
-		});
+	  $doc.on({
+	    vh_idxchanged: fn
+	  });
 	};
 	fn.when_vh_itemschanged = function (fn) {
 		/// <summary> view history idx changed </summary>
 		/// <param type="fn(e,p1)" name="fn" parameterArray="false"> 內容改變時執行 </param>
-		$doc.delegate('', {
-			vh_itemschanged: fn
-		});
+	  $doc.on({
+	    vh_itemschanged: fn
+	  });
 	};
 
 	fn.when_go = function (fn) {
 		/// <summary> setPageState() 被呼叫時, 將會觸發 go </summary>
 		/// <param type="fn(e,p1)" name="fn" parameterArray="false">p1:{chineses,chap,sec}</param>
-		$doc.delegate('', {
-			go: fn
-		});
+	  $doc.on({
+	    go: fn
+	  });
 	};
 
 	return new DocEvent();
@@ -1612,16 +1612,16 @@ var viewHistory = (function () {
 	fn.when_liclick = function (fn) {
 		/// <summary> ul 清單中的 li 被 click 的時候</summary>
 		/// <param type="fn(e,p1)" name="fn" parameterArray="false">{idx},回傳的是ul指在清單中的idx,</param>
-		$(viewHistory.dom).delegate('li', {
-			liclick: fn
-		});
+	  $(viewHistory.dom).on({
+	    liclick: fn
+	  },'li');
 	};
 	fn.when_clearall = function (fn) {
 		/// <summary> 清除所有 被按下去的時候 </summary>
 		/// <param type="fn(e)" name="fn" parameterArray="false"></param>
-		$(viewHistory.dom).delegate('.clearHistory', {
-			clearall: fn
-		});
+	  $(viewHistory.dom).on({
+	    clearall: fn
+	  }, '.clearHistory');
 	};
 	fn.init = function (ps, dom) {
 		this.dom = dom;
@@ -1640,7 +1640,7 @@ var viewHistory = (function () {
 				ul.append($("<li chineses=" + a1.chineses + " chap=" + a1.chap + ">" + a1.chineses + ":" + a1.chap + "</li>"));
 			})
 		}
-		$(document).delegate("", {
+		$(document).on({
 			vh_init: function (e, p1) {
 				renderList(p1.datas);
 			},
@@ -1649,7 +1649,7 @@ var viewHistory = (function () {
 			}
 		});
 
-		$vh.delegate('li', {
+		$vh.on({
 			click: function (e) {
 
 				// 傳出第幾個被點 ( 考慮 可5 可8 可5 ... 到底哪個可5被點 ) 0-based
@@ -1676,11 +1676,11 @@ var viewHistory = (function () {
 					fhlLecture.render(ps, fhlLecture.dom);
 					// that.render(ps, that.dom); // 已經處理了. vh_itemchanged 會處理
 			}
-		}).delegate('.clearHistory', {
+		},'li').on({
 			click: function (e) {
 				$(this).trigger('clearall');
 			}
-		});
+		}, '.clearHistory');
 	}
 	fn.registerEvents = function (ps) {
 		var that = this;
@@ -1983,7 +1983,7 @@ var fhlLecture = (function () {
 			}, 350));
 		});
 		// title 中的 version name lecMainTitle 是固定的, 加在 這個事件一次即可
-		$('#lecMainTitle').delegate('.versionName', {
+		$('#lecMainTitle').on({
 			click: function (e) {
 				var idx = ps.version.indexOf(versionSelect.dom.find('li[cname=' + $(this).children('.closeButton').attr('cname') + ']').attr('book'));
 				ps.version.splice(idx, 1);
@@ -2000,9 +2000,9 @@ var fhlLecture = (function () {
 				fhlLecture.render(ps, fhlLecture.dom);
 				e.stopPropagation();
 			}
-		});
+		},'.versionName' );
 		// 內容中的 lecMain 是固定的, 加在這個事件一次即可
-		$lecMain.delegate('.lec', {
+		$lecMain.on( {
 			click: function (e) {
 				if ($(this).hasClass('copyright')) //版本宣告,應該不能click snow add 2016.01.22(五)
 					return;
@@ -2025,9 +2025,9 @@ var fhlLecture = (function () {
 				setPageState(ps);
 				fhlInfo.render(ps);
 			}
-		});
+		}, '.lec');
 		// sn 的部分
-		$lecMain.delegate('.sn', {
+		$lecMain.on({
 			click: function () {
 				if (ps.realTimePopUp != 1) {
 					var offset = $(this).offset();
@@ -2064,18 +2064,18 @@ var fhlLecture = (function () {
 					}, 100));
 				}
 			}
-		});
+		}, '.sn');
 		// 向後巡覽 / 向前巡覽
 		var $vhb = $('#viewHistoryButton');
-		$vhb.delegate('.b', {
+		$vhb.on({
 			click: function (e) {
 				$lecture.trigger('bclick');// fhlLecture
 			}
-		}).delegate('.n', {
+		}, '.b').on({
 			click: function (e) {
 				$lecture.trigger('nclick');// fhlLecture
 			}
-		});
+		}, '.n');
 		(function () {
 			function recolor(e, p1) {
 				/// <summary> 當 viewHistory 資料或 idx 變的時候, 要判斷是不是灰色 (document的vh_idxchanged事件與vh_itemschanged事件) </summary>
@@ -2088,7 +2088,7 @@ var fhlLecture = (function () {
 				else
 					$vhb.find('.n').css('color', 'black');
 			}
-			$(document).delegate('',
+			$(document).on(
 				{
 					vh_idxchanged: recolor,
 					vh_itemschanged: recolor
@@ -2096,7 +2096,7 @@ var fhlLecture = (function () {
 		})();
 		
 		// .ft 注腳 click
-		$lecMain.delegate('.ft', {
+		$lecMain.on({
 			click: function (e) {
 				//console.log(this); //範例: <span class=ft ft=42 ver=tcv chap=2>【42】</span>
 				// http://bkbible.fhl.net/json/rt.php?engs=Gen&chap=2&version=tcv&gb=0&id=42
@@ -2131,10 +2131,10 @@ var fhlLecture = (function () {
 						$('#parsingPopUpInside').text("錯誤:於" + url + "時發生");
 				}, null);
 			}
-		});
+		}, '.ft');
 
 		// 地圖(綠色那個)click時, 發出sobj_pos訊息給地圖那邊接受
-		$lecMain.delegate('img.pos', {
+		$lecMain.on({
 			'click': function (e) {
 				try {
 					var sobj = $(this).parent(".sobj");
@@ -2142,14 +2142,14 @@ var fhlLecture = (function () {
 					$(document).trigger('sobj_pos', { sid: sid });
 				} catch (ex) { }
 			}
-		});
+		}, 'img.pos');
 	};// fn.init
 	
 	fn.when_bclick_or_nclick = function (fnb, fnn) {
 		/// <summary> fhlLecture 提供的 event </summary>
 		/// <param type="fn(e)" name="fnb" parameterArray="false">older history view</param>
 		/// <param type="fn(e)" name="fnn" parameterArray="false">newer history view</param>
-		$lecture.delegate('', {
+		$lecture.on({
 			bclick: fnb,
 			nclick: fnn
 		});
@@ -2673,7 +2673,7 @@ var fhlInfo={
 		$('#fhlInfo').css({ 'left': $(window).width() - fhlInfoWidth - 12 + 'px' });// 12 是外面border
 
 		// snow add, 2016.10 經文中的地點mark被click, 
-		$(document).delegate('', {
+		$(document).on({
 			'sobj_pos': function (e, p1) {
 				if (ps.titleId == "fhlInfoMap")
 				{
